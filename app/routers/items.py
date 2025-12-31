@@ -1,49 +1,29 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from datetime import datetime, timezone
 
 from ..database import get_db
-from ..models import Container, Item
+from ..models import Item
 
 router = APIRouter()
-
-class ItemCreate(BaseModel):
-    container_id: int
-    name: str
-    quantity: int = 1
 
 class ItemUpdate(BaseModel):
     name: str | None = None
     quantity: int | None = None
+    room_id: int | None = None
+    container_id: int | None = None
 
+class ItemResponse(BaseModel):
+    id: int
+    name: str
+    room_id: int
+    container_id: int | None = None
+    quantity: int
+    created_at: datetime = datetime.now(timezone.utc)
 
-@router.post("/")
-def add_item(data: ItemCreate, db: Session = Depends(get_db)):
-    """Add an item to a container"""
-    container = db.query(Container).filter(Container.id == data.container_id).first()
-    if not container:
-        raise HTTPException(status_code=404, detail="Container not found")
-    
-    # check if an item with this name already exists in this container
-    existing = db.query(Item).filter(Item.container_id == data.container_id, Item.name.ilike(data.name)).first()
-
-    if existing:
-        existing.quantity += data.quantity
-        db.commit()
-        return {"message": "{data.name} quantity updated", "id": existing.id, "quantity": existing.quantity}
-    
-    item = Item(
-        container_id=data.container_id,
-        name=data.name,
-        quantity=data.quantity
-    )
-
-    db.add(item)
-    db.commit()
-    db.refresh(item)
-
-    return {"message": "{data.name} added to container", "id": item.id, "quantity": item.quantity}
-
+    class Config:
+        from_attributes = True
 
 @router.put("/{item_id}")
 def update_item(item_id: int, data: ItemUpdate, db: Session = Depends(get_db)):
@@ -54,11 +34,22 @@ def update_item(item_id: int, data: ItemUpdate, db: Session = Depends(get_db)):
 
     if data.name is not None:
         item.name = data.name
+    if data.room_id is not None:
+        item.room_id = data.room_id
+    if data.container_id is not None:
+        item.container_id = data.container_id
     if data.quantity is not None:
         item.quantity = data.quantity
 
     db.commit()
-    return {"message": "Item updated", "id": item.id, "quantity": item.quantity}
+    return ItemResponse(
+        id=item.id,
+        name=item.name,
+        room_id=item.room_id,
+        container_id=item.container_id,
+        quantity=item.quantity,
+        created_at=item.created_at
+    )
 
 
 @router.delete("/{item_id}")
