@@ -29,6 +29,7 @@ def create_floor(data: FloorCreate, db: Session = Depends(get_db)):
     db.add(floor)
     db.commit()
     db.refresh(floor)
+    
     return FloorResponse(
         id=floor.id,
         name=floor.name,

@@ -167,7 +167,7 @@ def create_item(container_id: int, data: ItemCreate, db: Session = Depends(get_d
         existing_item.quantity += data.quantity
         db.commit()
         db.refresh(existing_item)
-        
+
         return ItemResponse(
             id=existing_item.id,
             name=existing_item.name,
@@ -178,7 +178,13 @@ def create_item(container_id: int, data: ItemCreate, db: Session = Depends(get_d
         )
 
     # create a new item
-    item = Item(name=data.name, container_id=container_id)
+    item = Item(
+        name=data.name,
+        container_id=container_id,
+        room_id=container.room_id,
+        quantity=data.quantity
+    )
+
     db.add(item)
     db.commit()
     db.refresh(item)

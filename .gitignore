@@ -1,2 +1,5 @@
 .env
 static/
+app/__pycache__/
+app/routers/__pycache__/
+venv/
