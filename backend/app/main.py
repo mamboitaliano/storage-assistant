@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import os
 
-from .database import engine, Base
+from .database import engine, Base, DATA_DIR
 from .routers import containers, items, rooms, floors, search
 
 # create db tables
@@ -11,8 +11,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Storage Assistant", version="1.0.0")
 
 # mount static files
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "..", "static")
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/static", StaticFiles(directory=DATA_DIR), name="static")
 
 # add routers
 app.include_router(containers.router, prefix="/containers", tags=["containers"])
