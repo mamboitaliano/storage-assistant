@@ -54,3 +54,67 @@ export interface SearchResult {
     rooms: Room[];
     floors: Floor[];
 }
+
+export const containersApi = {
+    list: async () => {
+        const { data } = await api.get<Container[]>('/containers');
+        return data;
+    },
+    get: async (id: number) => {
+        const { data } = await api.get<ContainerDetail>(`/containers/${id}`);
+        return data;
+    },
+    create: async (data: { name?: string; room_id?: string }) => {
+        const response = await api.post<Container>('/containers', data);
+        return response.data;
+    },
+    delete: async (id: number) => {
+        const { data } = await api.delete(`/containers/${id}`);
+        return data;
+    },
+    addItem: async (containerId: number, data: { name: string; quantity?: number}) => {
+        const response = await api.post<Item>(`/containers/${containerId}/items`, data);
+        return response.data;
+    },
+};
+
+export const roomsApi = {
+    list: async () => {
+        const { data } = await api.get<Room[]>('/rooms');
+        return data;
+    },
+    get: async (id: number) => {
+        const { data } = await api.get<Room>(`/rooms/${id}`);
+        return data;
+    },
+    create: async (data: { name?: string; floor_id?: number }) => {
+        const response = await api.post<Room>('/rooms', data);
+        return response.data;
+    },
+    addItem: async (roomId: number, data: { name?: string, quantity?: number }) => {
+        const response = await api.post<Item>(`/rooms/${roomId}/items`, data);
+        return response.data;
+    },
+};
+
+export const floorsApi = {
+    list: async () => {
+        const { data } = await api.get<Floor[]>('/floors');
+        return data;
+    },
+    create: async (data: { name?: string, floor_number?: number }) => {
+        const response = await api.post<Floor>('/floors', data);
+        return response.data;
+    },
+};
+
+export const itemsApi = {
+    update: async (id: number, data: { name?: string, quantity?: number }) => {
+        const response = await api.put<Item>(`/items/${id}`, data);
+        return response.data;
+    },
+    delete: async (id: number, quantity?: number) => {
+        const { data } = await api.delete(`/items/${id}`, { params: quantity ? { quantity } : undefined });
+        return data;
+    },
+};
