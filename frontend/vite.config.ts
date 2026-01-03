@@ -8,10 +8,10 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/containers': 'http://127.0.0.1:8000',
-      '/rooms': 'http://127.0.0.1:8000',
-      '/floors': 'http://127.0.0.1:8000',
-      '/items': 'http://127.0.0.1:8000',
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
       '/static': 'http://127.0.0.1:8000',
     }
   }
