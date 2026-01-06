@@ -42,6 +42,7 @@ export interface Floor {
     name: string | null;
     floor_number: number | null;
     created_at: string;
+    room_count: number;
 }
 
 export interface FloorDetail extends Floor {
@@ -100,6 +101,10 @@ export const roomsApi = {
 export const floorsApi = {
     list: async () => {
         const { data } = await api.get<Floor[]>('/floors/');
+        return data;
+    },
+    get: async (id: number) => {
+        const { data } = await api.get<FloorDetail>(`/floors/${id}`);
         return data;
     },
     create: async (data: { name?: string, floor_number?: number }) => {
