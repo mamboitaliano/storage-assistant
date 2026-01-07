@@ -111,6 +111,10 @@ export const floorsApi = {
         const response = await api.post<Floor>('/floors/', data);
         return response.data;
     },
+    delete: async (id: number) => {
+        const { data } = await api.delete(`/floors/${id}`);
+        return data;
+    },
 };
 
 export const itemsApi = {
