@@ -2,7 +2,6 @@ import type { ColumnDef, Row } from "@tanstack/react-table";
 import type { Floor } from "@/api";
 import FloorDropdown from "./FloorDropdown";
 
-
 export const floorColumns: ColumnDef<Floor>[] = [
   {
     accessorKey: "floor_number",

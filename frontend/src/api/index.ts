@@ -30,6 +30,8 @@ export interface Room {
     name: string | null;
     floor_id: number | null;
     created_at: string;
+    item_count: number;
+    container_count: number;
 }
 
 export interface RoomDetail extends Room {
@@ -95,6 +97,10 @@ export const roomsApi = {
     addItem: async (roomId: number, data: { name?: string, quantity?: number }) => {
         const response = await api.post<Item>(`/rooms/${roomId}/items/`, data);
         return response.data;
+    },
+    delete: async (id: number) => {
+        const { data } = await api.delete(`/rooms/${id}`);
+        return data;
     },
 };
 

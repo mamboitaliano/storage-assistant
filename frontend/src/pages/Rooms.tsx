@@ -1,6 +1,7 @@
 import PageHeader from "../components/PageHeader";
 import { useApi } from "../hooks/useApi";
 import { roomsApi } from "../api";
+import RoomsTable from "../features/rooms/RoomsTable";
 
 export default function Rooms() {
     const { data, loading, error } = useApi(roomsApi.list);
@@ -18,13 +19,9 @@ export default function Rooms() {
     }
 
     return (
-        <>
+        <div className="space-y-6">
             <PageHeader title="Rooms" />
-            <div className="flex flex-col gap-4">
-                {data.map(room => (
-                    <div key={room.id}>{room.name}</div>
-                ))}
-            </div>
-        </>
+            <RoomsTable data={data} />
+        </div>
     )
 };
