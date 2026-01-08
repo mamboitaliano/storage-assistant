@@ -1,11 +1,24 @@
-import type { Floor } from "@/api"
-import { DataTable } from "./data-table"
-import { floorColumns } from "./columns"
+import { DataTable } from "@/components/DataTable";
+import { useFloorStore } from "@/stores/floorsStore";
+import { floorColumns } from "./columns";
+import type { Floor } from "@/api";
 
 interface FloorsTableProps {
-  data: Floor[]
+    data: Floor[] | undefined;
 }
 
 export default function FloorsTable({ data }: FloorsTableProps) {
-  return <DataTable columns={floorColumns} data={data} />
+    const { rowSelection, setRowSelection } = useFloorStore();
+
+    return (
+        <DataTable
+            columns={floorColumns}
+            data={data || []}
+            selection={{
+                rowSelection,
+                onRowSelectionChange: setRowSelection,
+            }}
+            emptyMessage="No floors found."
+        />
+    );
 }

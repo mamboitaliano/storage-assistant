@@ -1,7 +1,5 @@
-import type { ColumnDef } from "@tanstack/react-table"
-import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
-import { useContainerStore } from "@/stores/containerStore"
-
+import type { ColumnDef, TableOptions } from "@tanstack/react-table";
+import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import {
   Table,
   TableBody,
@@ -9,30 +7,35 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
+
+type SelectionState<TData> = 
+    | { rowSelection: Record<string, boolean>; onRowSelectionChange: TableOptions<TData>["onRowSelectionChange"] }
+    | { rowSelection: undefined; onRowSelectionChange: undefined };
 
 interface DataTableProps<TData extends { id: number }, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  selection?: SelectionState<TData>;
+  emptyMessage?: string;
 }
 
 export function DataTable<TData extends { id: number }, TValue>({
   columns,
   data,
+  selection,
+  emptyMessage = "No data.",
 }: DataTableProps<TData, TValue>) {
-  const { rowSelection, setRowSelection } = useContainerStore()
 
   const table = useReactTable({
     data,
     columns,
+    enableRowSelection: !!selection,
+    state: selection ? { rowSelection: selection.rowSelection } : undefined,
     getCoreRowModel: getCoreRowModel(),
-    state: {
-      rowSelection,
-    },
-    onRowSelectionChange: setRowSelection,
-    enableRowSelection: true,
     getRowId: row => row.id.toString(),
-  })
+    onRowSelectionChange: selection?.onRowSelectionChange,
+  });
 
   return (
     <div className="rounded-md border border-border/50 bg-card/40 shadow-sm">
@@ -64,7 +67,7 @@ export function DataTable<TData extends { id: number }, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center text-sm text-muted-foreground">
-                No containers found.
+                {emptyMessage}
               </TableCell>
             </TableRow>
           )}
