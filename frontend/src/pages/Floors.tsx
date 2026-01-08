@@ -1,7 +1,7 @@
 import PageHeader from "../components/PageHeader";
 import { useApi } from "../hooks/useApi";
 import { floorsApi } from "../api";
-import { FloorsTable } from "../features/floors/FloorsTable";
+import FloorsTable from "@/features/floors/FloorsTable";
 
 export default function Floors() {
     const { data, loading, error } = useApi(floorsApi.list);

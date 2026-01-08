@@ -9,7 +9,7 @@ import {
     TableHeader,
     TableRow,
   } from "@/components/ui/table"
-import { useRoomStore } from "@/stores/roomStore";
+import { useItemStore } from "@/stores/itemsStore";
 
 interface DataTableProps<TData extends { id: number }, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -17,7 +17,7 @@ interface DataTableProps<TData extends { id: number }, TValue> {
 }
 
 export function DataTable<TData extends { id: number }, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
-    const { rowSelection, setRowSelection } = useRoomStore();
+    const { rowSelection, setRowSelection } = useItemStore();
     const table = useReactTable({
         data,
         columns,
@@ -60,7 +60,7 @@ export function DataTable<TData extends { id: number }, TValue>({ columns, data 
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-24 text-center text-sm text-muted-foreground">
-                    No rooms found.
+                    No items found.
                   </TableCell>
                 </TableRow>
               )}

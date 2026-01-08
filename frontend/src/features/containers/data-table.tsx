@@ -1,5 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
+import { useContainerStore } from "@/stores/containerStore"
 
 import {
   Table,
@@ -9,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useFloorStore } from "@/stores/floorsStore"
 
 interface DataTableProps<TData extends { id: number }, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -20,7 +20,8 @@ export function DataTable<TData extends { id: number }, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
-  const { rowSelection, setRowSelection } = useFloorStore();
+  const { rowSelection, setRowSelection } = useContainerStore()
+
   const table = useReactTable({
     data,
     columns,
@@ -31,7 +32,7 @@ export function DataTable<TData extends { id: number }, TValue>({
     onRowSelectionChange: setRowSelection,
     enableRowSelection: true,
     getRowId: row => row.id.toString(),
-  });
+  })
 
   return (
     <div className="rounded-md border border-border/50 bg-card/40 shadow-sm">
@@ -63,7 +64,7 @@ export function DataTable<TData extends { id: number }, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center text-sm text-muted-foreground">
-                No floors found.
+                No containers found.
               </TableCell>
             </TableRow>
           )}

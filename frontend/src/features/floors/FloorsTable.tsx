@@ -6,6 +6,6 @@ interface FloorsTableProps {
   data: Floor[]
 }
 
-export function FloorsTable({ data }: FloorsTableProps) {
+export default function FloorsTable({ data }: FloorsTableProps) {
   return <DataTable columns={floorColumns} data={data} />
 }
