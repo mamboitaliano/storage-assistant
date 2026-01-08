@@ -1,6 +1,7 @@
 import PageHeader from "../components/PageHeader";
 import { useApi } from "../hooks/useApi";
 import { containersApi } from "../api";
+import ContainersTable from "@/features/containers/ContainersTable";
 
 export default function Containers() {
     const { data, loading, error } = useApi(containersApi.list);
@@ -18,13 +19,9 @@ export default function Containers() {
     }
 
     return (
-        <>
+        <div className="space-y-6">
             <PageHeader title="Containers" />
-            <div className="flex flex-col gap-4">
-                {data.map(container => (
-                    <div key={container.id}>{container.name}</div>
-                ))}
-            </div>
-        </>
+            <ContainersTable data={data} />
+        </div>
     )
 };

@@ -1,6 +1,5 @@
-import type { ColumnDef } from "@tanstack/react-table"
-import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
-
+import type { ColumnDef, TableOptions } from "@tanstack/react-table";
+import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import {
   Table,
   TableBody,
@@ -8,19 +7,35 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
+type SelectionState<TData> = 
+    | { rowSelection: Record<string, boolean>; onRowSelectionChange: TableOptions<TData>["onRowSelectionChange"] }
+    | { rowSelection: undefined; onRowSelectionChange: undefined };
+
+interface DataTableProps<TData extends { id: number }, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  selection?: SelectionState<TData>;
+  emptyMessage?: string;
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData extends { id: number }, TValue>({
+  columns,
+  data,
+  selection,
+  emptyMessage = "No data.",
+}: DataTableProps<TData, TValue>) {
+
   const table = useReactTable({
     data,
     columns,
+    enableRowSelection: !!selection,
+    state: selection ? { rowSelection: selection.rowSelection } : undefined,
     getCoreRowModel: getCoreRowModel(),
-  })
+    getRowId: row => row.id.toString(),
+    onRowSelectionChange: selection?.onRowSelectionChange,
+  });
 
   return (
     <div className="rounded-md border border-border/50 bg-card/40 shadow-sm">
@@ -42,7 +57,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map(row => (
               <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                {row.getVisibleCells().map((cell) => (
+                {row.getVisibleCells().map(cell => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
@@ -52,7 +67,7 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center text-sm text-muted-foreground">
-                No floors found.
+                {emptyMessage}
               </TableCell>
             </TableRow>
           )}

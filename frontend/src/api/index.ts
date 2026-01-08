@@ -124,6 +124,10 @@ export const floorsApi = {
 };
 
 export const itemsApi = {
+    list: async () => {
+        const { data } = await api.get<Item[]>('/items/');
+        return data;
+    },
     update: async (id: number, data: { name?: string, quantity?: number }) => {
         const response = await api.put<Item>(`/items/${id}/`, data);
         return response.data;

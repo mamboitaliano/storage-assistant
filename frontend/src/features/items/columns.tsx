@@ -1,19 +1,19 @@
 import type { ColumnDef, Row, Table } from "@tanstack/react-table";
-import type { Floor } from "@/api";
-import FloorDropdown from "./FloorDropdown";
+import type { Item } from "@/api";
+import ItemDropdown from "@/features/items/ItemDropdown";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export const floorColumns: ColumnDef<Floor>[] = [
+export const itemColumns: ColumnDef<Item>[] = [
   {
     accessorKey: "select",
-    header: ({ table }: { table: Table<Floor> }) => (
+    header: ({ table }: { table: Table<Item> }) => (
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
         onCheckedChange={(value: boolean) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
       />
     ),
-    cell: ({ row }: { row: Row<Floor> }) => (
+    cell: ({ row }: { row: Row<Item> }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={(value: boolean) => row.toggleSelected(!!value)}
@@ -22,27 +22,22 @@ export const floorColumns: ColumnDef<Floor>[] = [
     ),
   },
   {
-    accessorKey: "floor_number",
-    header: "Floor #",
-    cell: ({ row }) => row.original.floor_number ?? "—",
-  },
-  {
     accessorKey: "name",
     header: "Name",
     cell: ({ row }) => row.original.name ?? "Untitled",
   },
   {
-    accessorKey: "room_count",
-    header: "Rooms",
-    cell: ({ row }) => row.original.room_count,
+    accessorKey: "quantity",
+    header: "Quantity",
+    cell: ({ row }) => row.original.quantity,
   },
   {
     id: "actions",
-    cell: ({ row }: { row: Row<Floor> }) => {
-      const floor = row.original;
+    cell: ({ row }: { row: Row<Item> }) => {
+      const item = row.original;
 
       return (
-          <FloorDropdown floor={floor} />
+          <ItemDropdown item={item} />
     )},
   },
-]
+];
