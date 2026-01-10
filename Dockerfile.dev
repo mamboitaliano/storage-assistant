@@ -1,0 +1,31 @@
+FROM python:3.12-bullseye
+
+# Install Node (20.x)
+RUN apt-get update \
+ && apt-get install -y curl ca-certificates gnupg \
+ && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+ && apt-get install -y nodejs \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy backend and install deps
+COPY backend/requirements.txt backend/requirements.txt
+RUN pip install --no-cache-dir -r backend/requirements.txt
+
+# Copy frontend manifest and install deps
+COPY frontend/package*.json frontend/
+RUN cd frontend && npm install
+
+COPY . .
+
+EXPOSE 8000 5173
+
+CMD bash -lc "\
+  set -e; \
+  pip install -r /app/backend/requirements.txt; \
+  if [ ! -d /app/frontend/node_modules ]; then cd /app/frontend && npm install; fi; \
+  cd /app/backend && uvicorn app.main:app --app-dir /app/backend --reload --host 0.0.0.0 --port 8000 & \
+  cd /app/frontend && npm run dev -- --host --port 5173 \
+"
