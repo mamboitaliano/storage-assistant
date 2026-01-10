@@ -7,6 +7,12 @@ from ..services import items as items_service
 
 router = APIRouter()
 
+@router.get("/")
+def get_items(db: Session = Depends(get_db)):
+    """Get all items"""
+    items = items_service.get_items(db)
+    return items
+
 @router.put("/{item_id}")
 def update_item(item_id: int, data: ItemUpdate, db: Session = Depends(get_db)):
     """Update an item's name or quantity"""
