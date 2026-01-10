@@ -13,7 +13,7 @@ class Floor(Base):
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
     # define relationships
-    rooms = relationship("Room", back_populates="floor") # rooms on the floor
+    rooms = relationship("Room", back_populates="floor", cascade="all, delete-orphan") # rooms on the floor
 
 class Room(Base):
     __tablename__ = "rooms"
@@ -21,13 +21,13 @@ class Room(Base):
     # define base cols
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True) # name of the room
-    floor_id = Column(Integer, ForeignKey("floors.id"), nullable=True) # floor the room belongs to
+    floor_id = Column(Integer, ForeignKey("floors.id", ondelete="CASCADE"), nullable=True) # floor the room belongs to
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
     # define relationships
     floor = relationship("Floor", back_populates="rooms") # floor the room belongs to
-    containers = relationship("Container", back_populates="room") # containers in the room
-    items = relationship("Item", back_populates="room") # items in the room
+    containers = relationship("Container", back_populates="room", cascade="all, delete-orphan") # containers in the room
+    items = relationship("Item", back_populates="room", cascade="all, delete-orphan") # items in the room
 
 class Container(Base):
     __tablename__ = "containers"
@@ -37,7 +37,7 @@ class Container(Base):
     name = Column(String, index=True) # name of the container
     qr_code_path = Column(String, nullable=True) # path to the QR code image
     created_at = Column(DateTime, default=datetime.now(timezone.utc)) # timestamp of creation
-    room_id = Column(Integer, ForeignKey("rooms.id"), nullable=True) # room the container belongs to
+    room_id = Column(Integer, ForeignKey("rooms.id", ondelete="CASCADE"), nullable=True) # room the container belongs to
 
     # define relationships
     room = relationship("Room", back_populates="containers") # room the container belongs to
@@ -50,7 +50,7 @@ class Item(Base):
     # define base cols
     id = Column(Integer, primary_key=True, index=True)
     container_id = Column(Integer, ForeignKey("containers.id"), nullable=True)
-    room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False)
+    room_id = Column(Integer, ForeignKey("rooms.id", ondelete="CASCADE"), nullable=False)
     name = Column(String, nullable=False, index=True) # item name
     quantity = Column(Integer, default=1) # quantity of the item
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
@@ -63,7 +63,7 @@ class Photo(Base):
 
     # define base cols
     id = Column(Integer, primary_key=True, index=True)
-    container_id = Column(Integer, ForeignKey("containers.id"), nullable=False)
+    container_id = Column(Integer, ForeignKey("containers.id", ondelete="CASCADE"), nullable=False)
     file_path = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
