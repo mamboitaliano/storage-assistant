@@ -4,6 +4,10 @@ from ..models import Item
 from ..schemas.items import ItemUpdate, ItemResponse
 
 
+def get_items(db: Session) -> list[Item]:
+    items = db.query(Item).all()
+    return items
+
 def update_item(db: Session, item_id: int, data: ItemUpdate) -> ItemResponse | None:
     item = db.query(Item).filter(Item.id == item_id).first()
     if not item:

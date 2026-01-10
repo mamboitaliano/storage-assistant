@@ -25,3 +25,13 @@ def get_floor(floor_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Floor not found")
 
     return floor
+
+@router.delete("/{floor_id}")
+async def delete_floor(floor_id: int, db: Session = Depends(get_db)):
+    """Delete a floor by ID"""
+    try:
+        await floors_service.delete_floor(db, floor_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
+    return {"message": "Floor deleted successfully"}

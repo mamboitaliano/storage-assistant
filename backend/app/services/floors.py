@@ -45,6 +45,7 @@ def list_floors_with_counts(db: Session) -> list[FloorResponse]:
 
 def get_floor_detail(db: Session, floor_id: int) -> FloorResponse | None:
     floor = db.query(Floor).filter(Floor.id == floor_id).first()
+
     if not floor:
         return None
 
@@ -79,3 +80,18 @@ def get_floor_detail(db: Session, floor_id: int) -> FloorResponse | None:
             for room, item_count, container_count in rooms_with_counts
         ],
     )
+
+def delete_floor(db: Session, floor_id: int) -> None:
+    floor = db.query(Floor).filter(Floor.id == floor_id).first()
+
+    if not floor:
+        raise ValueError("Floor not found")
+
+    rooms = db.query(Room).filter(Room.floor_id == floor_id).all()
+    # TODO: we'll need to figure out all rooms on the floor and delete them, and all items/containers assigned to these rooms
+    # will need to be deleted as well. The frontend should prompt the user to move the items/containers to different rooms first.
+
+    db.delete(floor)
+    db.commit()
+
+    return None
