@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+      - "5173:5173"
+    environment:
+      DATA_DIR: /app/data
+    volumes:
+      - .:/app
+      - dev-data:/app/data  # optional, keeps SQLite separate from image
+      - dev-node-modules:/app/frontend/node_modules  # keep deps separate
+volumes:
+  dev-data:
+  dev-node-modules:
