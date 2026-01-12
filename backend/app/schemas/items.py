@@ -1,7 +1,5 @@
 from datetime import datetime, timezone
-
-from pydantic import BaseModel
-
+from pydantic import BaseModel, ConfigDict
 
 class ItemCreate(BaseModel):
     name: str
@@ -25,8 +23,7 @@ class ItemResponse(BaseModel):
     quantity: int
     created_at: datetime = datetime.now(timezone.utc)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaginatedItemResponse(BaseModel):
@@ -36,5 +33,4 @@ class PaginatedItemResponse(BaseModel):
     page_size: int
     total_pages: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
