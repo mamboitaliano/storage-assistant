@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from ..models import Item
 from ..schemas.items import ItemUpdate, ItemResponse
 
-
 def get_items(db: Session) -> list[Item]:
     items = db.query(Item).all()
     return items
