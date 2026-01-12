@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
-
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class FloorCreate(BaseModel):
@@ -16,8 +15,7 @@ class RoomResponse(BaseModel):
     item_count: int = 0
     container_count: int = 0
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FloorResponse(BaseModel):
@@ -28,5 +26,4 @@ class FloorResponse(BaseModel):
     room_count: int = 0
     rooms: list[RoomResponse] | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
-
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from .items import ItemResponse, PaginatedItemResponse, ItemCreate
 
@@ -16,8 +15,7 @@ class RoomResponse(BaseModel):
     floor_id: int | None = None
     created_at: datetime = datetime.now(timezone.utc)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RoomItemCreate(ItemCreate):

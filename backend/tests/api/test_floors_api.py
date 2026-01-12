@@ -1,6 +1,5 @@
 from app.models import Floor, Room
 
-
 def test_list_floors_api(client, db_session):
     floor = Floor(name="First", floor_number=1)
     room = Room(name="Room A", floor=floor)
@@ -10,6 +9,7 @@ def test_list_floors_api(client, db_session):
 
     response = client.get("/floors/")
     assert response.status_code == 200
+    
     payload = response.json()
     assert isinstance(payload, list)
     assert payload[0]["name"] == "First"
@@ -25,6 +25,7 @@ def test_get_floor_detail_api(client, db_session):
 
     response = client.get(f"/floors/{floor.id}")
     assert response.status_code == 200
+    
     payload = response.json()
     assert payload["name"] == "Second"
     assert payload["room_count"] == 1
