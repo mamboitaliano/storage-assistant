@@ -27,10 +27,9 @@ class ItemResponse(BaseModel):
 
 
 class PaginatedItemResponse(BaseModel):
-    items: list[ItemResponse]
+    data: list[ItemResponse]
     total: int
     page: int
-    page_size: int
-    total_pages: int
+    pageSize: int
 
     model_config = ConfigDict(from_attributes=True)

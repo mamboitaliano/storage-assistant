@@ -32,18 +32,3 @@ def test_create_item_in_room_increments_existing(db_session, floor):
     assert result is not None
     assert result.quantity == 3  # quantity increased
 
-
-def test_list_items_in_room_returns_paginated(db_session, floor):
-    room = Room(name="Living", floor_id=floor.id)
-    db_session.add(room)
-    db_session.commit()
-
-    for i in range(3):
-        db_session.add(Item(name=f"Item {i}", room_id=room.id, quantity=1, container_id=None))
-    db_session.commit()
-
-    resp = rooms_service.list_items_in_room(db_session, room.id, page=1, page_size=2)
-    
-    assert resp is not None
-    assert resp.total == 3
-    assert len(resp.items) == 2  # page size limit

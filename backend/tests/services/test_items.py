@@ -14,7 +14,6 @@ def room(db_session):
     db_session.commit()
     return r
 
-
 def test_update_item(db_session, room):
     item = Item(name="Widget", room_id=room.id, quantity=1, container_id=None)
     db_session.add(item)
@@ -32,7 +31,6 @@ def test_update_item(db_session, room):
     assert updated.room_id == room.id
     assert updated.container_id is None
 
-
 def test_delete_item_reduces_quantity(db_session, room):
     item = Item(name="Screws", room_id=room.id, quantity=10, container_id=None)
     db_session.add(item)
@@ -42,7 +40,6 @@ def test_delete_item_reduces_quantity(db_session, room):
     assert resp["message"] == "Item quantity reduced"
     db_session.refresh(item)
     assert item.quantity == 6
-
 
 def test_delete_item_removes_when_no_quantity_given(db_session, room):
     item = Item(name="Box", room_id=room.id, quantity=1, container_id=None)
@@ -61,10 +58,10 @@ def create_items(db_session, room, count=30):
     db_session.commit();
 
 def assert_pagination_result(result, total, page, page_size, data_length):
-    assert result["total"] == total
-    assert result["page"] == page
-    assert result["pageSize"] == page_size
-    assert len(result["data"]) == data_length
+    assert result.total == total
+    assert result.page == page
+    assert result.pageSize == page_size
+    assert len(result.data) == data_length
 
 def test_get_items_paginated_returns_first_page(db_session, room):
     create_items(db_session, room, 30)
