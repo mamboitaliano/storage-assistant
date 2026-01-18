@@ -17,6 +17,14 @@ class RoomResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class PaginatedRoomResponse(BaseModel):
+    data: list[RoomResponse]
+    total: int
+    page: int
+    pageSize: int
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class RoomItemCreate(ItemCreate):
     """Proxy schema for creating items within a room context."""

@@ -2,9 +2,10 @@ from math import ceil
 from sqlalchemy.orm import Session
 
 from ..models import Room, Item
-from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemsResponse, RoomItemCreate
+from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemsResponse, RoomItemCreate, PaginatedRoomResponse
 from ..schemas.items import ItemResponse
 
+PAGE_SIZE = 25
 
 def create_room(db: Session, data: RoomCreate) -> RoomResponse:
     room = Room(name=data.name, floor_id=data.floor_id)
@@ -20,20 +21,26 @@ def create_room(db: Session, data: RoomCreate) -> RoomResponse:
         created_at=room.created_at,
     )
 
+def list_rooms_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE) -> PaginatedRoomResponse:
+    """List rooms with pagination"""
+    total = db.query(Room).count()
+    offset = (page - 1) * page_size
+    rooms = db.query(Room).offset(offset).limit(page_size).all()
 
-def list_rooms(db: Session) -> list[RoomResponse]:
-    rooms = db.query(Room).all()
-
-    return [
-        RoomResponse(
-            id=r.id,
-            name=r.name,
-            floor_id=r.floor_id,
-            created_at=r.created_at,
-        )
-        for r in rooms
-    ]
-
+    return PaginatedRoomResponse(
+        data=[
+            RoomResponse(
+                id=r.id,
+                name=r.name,
+                floor_id=r.floor_id,
+                created_at=r.created_at,
+            )
+            for r in rooms
+        ],
+        total=total,
+        page=page,
+        pageSize=page_size,
+    )
 
 def get_room(db: Session, room_id: int) -> RoomResponse | None:
     room = db.query(Room).filter(Room.id == room_id).first()
@@ -46,7 +53,6 @@ def get_room(db: Session, room_id: int) -> RoomResponse | None:
         floor_id=room.floor_id,
         created_at=room.created_at,
     )
-
 
 def create_item_in_room(db: Session, room_id: int, data: RoomItemCreate) -> ItemResponse | None:
     room = db.query(Room).filter(Room.id == room_id).first()
@@ -95,7 +101,6 @@ def create_item_in_room(db: Session, room_id: int, data: RoomItemCreate) -> Item
         quantity=item.quantity,
         created_at=item.created_at,
     )
-
 
 def list_items_in_room(
     db: Session,

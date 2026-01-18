@@ -1,24 +1,36 @@
-from app.models import Floor, Room
+from app.models import Room
+from tests.services.test_rooms import create_rooms
 
-def test_list_rooms_api(client, db_session):
-    floor = Floor(name="First", floor_number=1)
-    room = Room(name="Room A", floor=floor)
-    db_session.add_all([floor, room])
-    db_session.commit()
+def assert_pagination_result(response, status_code, total, page, data_length):
+    data = response.json()
+    assert response.status_code == status_code
+    assert data["total"] == total
+    assert data["page"] == page
+    assert data["pageSize"] == 25
+    assert len(data["data"]) == data_length
 
-    resp = client.get("/rooms/")
-    assert resp.status_code == 200
-    data = resp.json()
+def test_get_rooms_paginated_api_returns_first_page(client, db_session, floor):
+    create_rooms(db_session, floor, 30)
+    resp = client.get("/rooms/?page=1")
+    assert_pagination_result(resp, 200, 30, 1, 25)
 
-    assert isinstance(data, list)
-    assert data[0]["name"] == "Room A"
-    assert data[0]["floor_id"] == floor.id
+def test_get_rooms_paginated_api_returns_second_page(client, db_session, floor):
+    create_rooms(db_session, floor, 30)
+    resp = client.get("/rooms/?page=2")
+    assert_pagination_result(resp, 200, 30, 2, 5)
 
+def test_get_rooms_paginated_api_empty_page(client, db_session, floor):
+    create_rooms(db_session, floor, 10)
+    resp = client.get("/rooms/?page=2")
+    assert_pagination_result(resp, 200, 10, 2, 0)
 
-def test_get_room_api(client, db_session):
-    floor = Floor(name="Second", floor_number=2)
-    room = Room(name="Room B", floor=floor)
-    db_session.add_all([floor, room])
+def test_get_rooms_paginated_api_no_rooms(client):
+    resp = client.get("/rooms/?page=1")
+    assert_pagination_result(resp, 200, 0, 1, 0)
+
+def test_get_room_api(client, db_session, floor):
+    room = Room(name="Room B", floor_id=floor.id)
+    db_session.add(room)
     db_session.commit()
 
     resp = client.get(f"/rooms/{room.id}")
