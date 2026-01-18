@@ -1,18 +1,6 @@
-import pytest
-from app.models import Item, Room, Floor
+from app.models import Item
 from app.schemas.items import ItemUpdate
 from app.services import items as items_service
-
-@pytest.fixture
-def room(db_session):
-    f = Floor(name="Test Floor", floor_number=1)
-    db_session.add(f)
-    db_session.commit()
-
-    r = Room(name="Test Room", floor_id=f.id)
-    db_session.add(r)
-    db_session.commit()
-    return r
 
 def test_update_item(db_session, room):
     item = Item(name="Widget", room_id=room.id, quantity=1, container_id=None)

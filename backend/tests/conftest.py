@@ -8,6 +8,7 @@ from sqlalchemy.pool import StaticPool
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.database import Base, get_db
+from app.models import Floor, Room
 from app.main import app
 
 # shared in-memory SQLite test engine with FK support
@@ -49,3 +50,19 @@ def client(db_session):
         yield c
     app.dependency_overrides.clear()
 
+
+# Floor fixture ----------------------------------------------------------------
+@pytest.fixture(scope="function")
+def floor(db_session):
+    f = Floor(name="Test Floor", floor_number=1)
+    db_session.add(f)
+    db_session.commit()
+    return f
+
+# Room fixture ----------------------------------------------------------------
+@pytest.fixture(scope="function")
+def room(db_session, floor):
+    room = Room(name="Test room", floor_id=floor.id)
+    db_session.add(room)
+    db_session.commit()
+    return room

@@ -1,22 +1,8 @@
-import pytest
-from app.models import Floor, Room, Item
+from app.models import Item
 
-@pytest.fixture
-def room(db_session):
-    floor = Floor(name="Test floor", floor_number=1)
-    db_session.add(floor)
-    db_session.commit()
-
-    room = Room(name="Test room", floor_id=floor.id)
-    db_session.add(room)
-    db_session.commit()
-    return room
-
-def test_update_item_api(client, db_session):
-    floor = Floor(name="First", floor_number=1)
-    room = Room(name="Room A", floor=floor)
-    item = Item(name="Widget", room=room, container_id=None, quantity=1)
-    db_session.add_all([floor, room, item])
+def test_update_item_api(client, db_session, room):
+    item = Item(name="Widget", room_id=room.id, container_id=None, quantity=1)
+    db_session.add(item)
     db_session.commit()
 
     resp = client.put(f"/items/{item.id}", json={"name": "Gadget", "quantity": 5})
@@ -27,11 +13,9 @@ def test_update_item_api(client, db_session):
     assert data["quantity"] == 5
 
 
-def test_delete_item_api(client, db_session):
-    floor = Floor(name="Second", floor_number=2)
-    room = Room(name="Room B", floor=floor)
-    item = Item(name="Box", room=room, container_id=None, quantity=1)
-    db_session.add_all([floor, room, item])
+def test_delete_item_api(client, db_session, room):
+    item = Item(name="Box", room_id=room.id, container_id=None, quantity=1)
+    db_session.add(item)
     db_session.commit()
 
     resp = client.delete(f"/items/{item.id}")

@@ -17,6 +17,14 @@ class ContainerResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class PaginatedContainerResponse(BaseModel):
+    data: list[ContainerResponse]
+    total: int
+    page: int
+    pageSize: int
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class ContainerDetailResponse(ContainerResponse):
     items: list[ItemResponse]
