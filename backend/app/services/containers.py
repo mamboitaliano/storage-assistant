@@ -10,6 +10,7 @@ from ..schemas.containers import (
     ContainerResponse,
     ContainerDetailResponse,
     ContainerItemCreate,
+    PaginatedContainerResponse,
 )
 from ..schemas.items import ItemResponse
 
@@ -17,8 +18,10 @@ from ..schemas.items import ItemResponse
 QR_DIR = os.path.join(DATA_DIR, "qr_codes")
 os.makedirs(QR_DIR, exist_ok=True)
 
+PAGE_SIZE = 25
 
 def create_container(db: Session, data: ContainerCreate) -> ContainerResponse:
+    """Create a new container"""
     container = Container(name=data.name, room_id=data.room_id)
 
     db.add(container)
@@ -44,23 +47,30 @@ def create_container(db: Session, data: ContainerCreate) -> ContainerResponse:
         item_count=0,
     )
 
+def list_containers_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE) -> PaginatedContainerResponse:
+    """List containers with pagination"""
+    total = db.query(Container).count()
+    offset = (page - 1) * page_size
+    containers = db.query(Container).offset(offset).limit(page_size).all()
 
-def list_containers(db: Session) -> list[ContainerResponse]:
-    containers = db.query(Container).all()
-
-    return [
-        ContainerResponse(
-            id=c.id,
-            name=c.name,
-            room_id=c.room_id,
-            qr_code_path=c.qr_code_path,
-            item_count=len(c.items),
-        )
-        for c in containers
-    ]
-
+    return PaginatedContainerResponse(
+        data=[
+            ContainerResponse(
+                id=c.id,
+                name=c.name,
+                room_id=c.room_id,
+                qr_code_path=c.qr_code_path,
+                item_count=len(c.items),
+            )
+            for c in containers
+        ],
+        total=total,
+        page=page,
+        pageSize=page_size,
+    )
 
 def get_container_detail(db: Session, container_id: int) -> ContainerDetailResponse | None:
+    """Get a container with all its details"""
     container = db.query(Container).filter(Container.id == container_id).first()
     if not container:
         return None
@@ -84,8 +94,8 @@ def get_container_detail(db: Session, container_id: int) -> ContainerDetailRespo
         ],
     )
 
-
 def update_container(db: Session, container_id: int, data: ContainerCreate) -> ContainerDetailResponse | None:
+    """Update a container"""
     container = db.query(Container).filter(Container.id == container_id).first()
     if not container:
         return None
@@ -114,8 +124,8 @@ def update_container(db: Session, container_id: int, data: ContainerCreate) -> C
         ],
     )
 
-
 def delete_container(db: Session, container_id: int) -> dict | None:
+    """Delete a container"""
     container = db.query(Container).filter(Container.id == container_id).first()
     if not container:
         return None
@@ -130,8 +140,8 @@ def delete_container(db: Session, container_id: int) -> dict | None:
     db.commit()
     return {"message": "Container deleted", "id": container.id}
 
-
 def create_item_in_container(db: Session, container_id: int, data: ContainerItemCreate) -> ItemResponse | None:
+    """Create a new item in a container"""
     container = db.query(Container).filter(Container.id == container_id).first()
     if not container:
         return None

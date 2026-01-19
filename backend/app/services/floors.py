@@ -2,10 +2,12 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..models import Container, Floor, Item, Room
-from ..schemas.floors import FloorCreate, FloorResponse, RoomResponse
+from ..schemas.floors import FloorCreate, FloorResponse, RoomResponse, PaginatedFloorResponse
 
+PAGE_SIZE = 25
 
 def create_floor(db: Session, data: FloorCreate) -> FloorResponse:
+    """Create a new floor"""
     floor = Floor(name=data.name, floor_number=data.floor_number)
 
     db.add(floor)
@@ -21,29 +23,39 @@ def create_floor(db: Session, data: FloorCreate) -> FloorResponse:
         rooms=None,
     )
 
+def list_floors_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE) -> PaginatedFloorResponse:
+    """List floors with pagination and room counts"""
+    total = db.query(Floor).count()
+    offset = (page - 1) * page_size
 
-def list_floors_with_counts(db: Session) -> list[FloorResponse]:
     rows = (
         db.query(Floor, func.count(Room.id).label("room_count"))
         .outerjoin(Room, Floor.id == Room.floor_id)
         .group_by(Floor.id)
+        .offset(offset)
+        .limit(page_size)
         .all()
     )
 
-    return [
-        FloorResponse(
-            id=f.id,
-            name=f.name,
-            floor_number=f.floor_number,
-            created_at=f.created_at,
-            room_count=room_count,
-            rooms=None,
-        )
-        for f, room_count in rows
-    ]
-
+    return PaginatedFloorResponse(
+        data=[
+            FloorResponse(
+                id=f.id,
+                name=f.name,
+                floor_number=f.floor_number,
+                created_at=f.created_at,
+                room_count=room_count,
+                rooms=None,
+            )
+            for f, room_count in rows
+        ],
+        total=total,
+        page=page,
+        pageSize=page_size,
+    )
 
 def get_floor_detail(db: Session, floor_id: int) -> FloorResponse | None:
+    """Get a floor by ID"""
     floor = db.query(Floor).filter(Floor.id == floor_id).first()
 
     if not floor:
@@ -82,6 +94,7 @@ def get_floor_detail(db: Session, floor_id: int) -> FloorResponse | None:
     )
 
 def delete_floor(db: Session, floor_id: int) -> None:
+    """Delete a floor"""
     floor = db.query(Floor).filter(Floor.id == floor_id).first()
 
     if not floor:

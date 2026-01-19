@@ -1,15 +1,7 @@
-import pytest
-from app.models import Room, Item, Floor
+from app.models import Room, Item
 from app.schemas.rooms import RoomCreate, RoomItemCreate
 from app.services import rooms as rooms_service
-
-@pytest.fixture
-def floor(db_session):
-    f = Floor(name="Test Floor", floor_number=1)
-    db_session.add(f)
-    db_session.commit()
-    return f
-
+from tests.helpers import create_rooms, assert_pagination_service_response
 
 def test_create_room(db_session, floor):
     data = RoomCreate(name="Office", floor_id=floor.id)
@@ -17,7 +9,6 @@ def test_create_room(db_session, floor):
 
     assert resp.name == "Office"
     assert resp.floor_id == floor.id
-
 
 def test_create_item_in_room_increments_existing(db_session, floor):
     room = Room(name="Storage", floor_id=floor.id)
@@ -32,18 +23,22 @@ def test_create_item_in_room_increments_existing(db_session, floor):
     assert result is not None
     assert result.quantity == 3  # quantity increased
 
+# Pagination tests ------------------------------------------------------------
+def test_list_rooms_paginated_returns_first_page(db_session, floor):
+    create_rooms(db_session, floor.id, 30)
+    result = rooms_service.list_rooms_paginated(db_session, page=1, page_size=25)
+    assert_pagination_service_response(result, 30, 1, 25, 25)
 
-def test_list_items_in_room_returns_paginated(db_session, floor):
-    room = Room(name="Living", floor_id=floor.id)
-    db_session.add(room)
-    db_session.commit()
+def test_list_rooms_paginated_returns_second_page(db_session, floor):
+    create_rooms(db_session, floor.id, 30)
+    result = rooms_service.list_rooms_paginated(db_session, page=2, page_size=25)
+    assert_pagination_service_response(result, 30, 2, 25, 5)
 
-    for i in range(3):
-        db_session.add(Item(name=f"Item {i}", room_id=room.id, quantity=1, container_id=None))
-    db_session.commit()
+def test_list_rooms_paginated_empty_page(db_session, floor):
+    create_rooms(db_session, floor.id, 10)
+    result = rooms_service.list_rooms_paginated(db_session, page=2, page_size=25)
+    assert_pagination_service_response(result, 10, 2, 25, 0)
 
-    resp = rooms_service.list_items_in_room(db_session, room.id, page=1, page_size=2)
-    
-    assert resp is not None
-    assert resp.total == 3
-    assert len(resp.items) == 2  # page size limit
+def test_list_rooms_paginated_no_rooms(db_session):
+    result = rooms_service.list_rooms_paginated(db_session, page=1, page_size=25)
+    assert_pagination_service_response(result, 0, 1, 25, 0)

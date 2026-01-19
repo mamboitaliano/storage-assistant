@@ -4,6 +4,13 @@ const api = axios.create({
     baseURL: "/api",
 });
 
+export interface PaginatedResponse<T> {
+    data: T[];
+    total: number;
+    page: number;
+    pageSize: number;
+}
+
 export interface Item {
     id: number;
     name: string;
@@ -59,8 +66,8 @@ export interface SearchResult {
 }
 
 export const containersApi = {
-    list: async () => {
-        const { data } = await api.get<Container[]>('/containers/');
+    list: async (page: number = 1) => {
+        const { data } = await api.get<PaginatedResponse<Container>>(`/containers/?page=${page}`);
         return data;
     },
     get: async (id: number) => {
@@ -82,8 +89,8 @@ export const containersApi = {
 };
 
 export const roomsApi = {
-    list: async () => {
-        const { data } = await api.get<Room[]>('/rooms/');
+    list: async (page: number = 1) => {
+        const { data } = await api.get<PaginatedResponse<Room>>(`/rooms/?page=${page}`);
         return data;
     },
     get: async (id: number) => {
@@ -105,8 +112,8 @@ export const roomsApi = {
 };
 
 export const floorsApi = {
-    list: async () => {
-        const { data } = await api.get<Floor[]>('/floors/');
+    list: async (page: number = 1) => {
+        const { data } = await api.get<PaginatedResponse<Floor>>(`/floors/?page=${page}`);
         return data;
     },
     get: async (id: number) => {
@@ -124,8 +131,8 @@ export const floorsApi = {
 };
 
 export const itemsApi = {
-    list: async () => {
-        const { data } = await api.get<Item[]>('/items/');
+    list: async (page: number = 1) => {
+        const { data } = await api.get<PaginatedResponse<Item>>(`/items/?page=${page}`);
         return data;
     },
     update: async (id: number, data: { name?: string, quantity?: number }) => {

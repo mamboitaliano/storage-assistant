@@ -7,7 +7,7 @@ def seed_rooms(db, floors) -> list[Room]:
     rooms: list[Room] = []
 
     for floor in floors:
-        for _ in range(2):
+        for _ in range(3):
             rooms.append(
                 Room(
                     name=f"{fake.word().title()} Room",

@@ -8,25 +8,25 @@ def seed_items(db, rooms, containers) -> list[Item]:
 
     # items in actual containers
     for container in containers:
-        for _ in range(fake.random_int(min=2, max=4)):
+        for _ in range(fake.random_int(min=2, max=30)):
             items.append(
                 Item(
                     name=fake.word().title(),
                     room_id=container.room_id,
                     container_id=container.id,
-                    quantity=fake.random_int(min=1, max=10),
+                    quantity=fake.random_int(min=20, max=50),
                 )
             )
     
     # loose items in rooms
     for room in rooms:
-        for _ in range(fake.random_int(min=1, max=8)):
+        for _ in range(fake.random_int(min=1, max=10)):
             items.append(
                 Item(
                     name=fake.word().title(),
                     room_id=room.id,
                     container_id=None,
-                    quantity=fake.random_int(min=1, max=6),
+                    quantity=fake.random_int(min=50, max=100),
                 )
             )
     

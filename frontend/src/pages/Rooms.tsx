@@ -1,15 +1,24 @@
-import PageHeader from "../components/PageHeader";
-import { useApi } from "../hooks/useApi";
+import { usePaginatedApi } from "../hooks/usePaginatedApi";
 import { roomsApi } from "../api";
-import RoomsTable from "../features/rooms/RoomsTable";
+import Paginator from "@/components/Paginator";
+import PageHeader from "../components/PageHeader";
+import RoomsTable from "@/features/rooms/RoomsTable";
 
 export default function Rooms() {
-    const { data, loading, error } = useApi(roomsApi.list);
+    const { 
+        data, 
+        loading, 
+        error, 
+        page, 
+        setPage, 
+        totalPages, 
+        hasMultiplePages 
+      } = usePaginatedApi(roomsApi.list);
 
     if (loading) {
         return <div>Loading...</div>;
     }
-
+    
     if (error) {
         return <div>Error: {error.message}</div>;
     }
@@ -19,9 +28,16 @@ export default function Rooms() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="flex flex-col h-full">
             <PageHeader title="Rooms" />
-            <RoomsTable data={data} />
+            <div className="flex-1 min-h-0 mt-6 overflow-auto">
+                <RoomsTable data={data} />
+            </div>
+            {hasMultiplePages && (
+                <div className="flex-shrink-0 py-4">
+                    <Paginator page={page} totalPages={totalPages} onPageChange={setPage} />
+                </div>
+            )}
         </div>
     )
 };
