@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..services import floors as floors_service
-from ..schemas.floors import FloorCreate, FloorResponse
+from ..schemas.floors import FloorCreate, FloorResponse, PaginatedFloorResponse
 
 router = APIRouter()
 
@@ -11,10 +11,10 @@ def create_floor(data: FloorCreate, db: Session = Depends(get_db)):
     """Create a new floor"""
     return floors_service.create_floor(db, data)
 
-@router.get("/", response_model=list[FloorResponse])
-def list_floors(db: Session = Depends(get_db)):
+@router.get("/", response_model=PaginatedFloorResponse)
+def list_floors(page: int = Query(1, ge=1),db: Session = Depends(get_db)):
     """List all floors"""
-    return floors_service.list_floors_with_counts(db)
+    return floors_service.list_floors_paginated(db, page=page)
 
 @router.get("/{floor_id}", response_model=FloorResponse)
 def get_floor(floor_id: int, db: Session = Depends(get_db)):

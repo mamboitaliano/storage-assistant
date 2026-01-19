@@ -57,6 +57,7 @@ def delete_item(db: Session, item_id: int, quantity: int | None = None) -> dict 
     if quantity and quantity < item.quantity:
         item.quantity -= quantity
         db.commit()
+        db.refresh(item)
         return {"message": "Item quantity reduced", "id": item.id, "quantity": item.quantity}
 
     db.delete(item)
