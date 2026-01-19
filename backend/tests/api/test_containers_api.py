@@ -1,29 +1,28 @@
-from app.models import Container, Floor, Item, Room
+from app.models import Container
+from tests.helpers import create_containers, assert_pagination_api_response
 
-def test_list_containers_api(client, db_session):
-    floor = Floor(name="First", floor_number=1)
-    room = Room(name="Room A", floor=floor)
-    container = Container(name="Bin", room=room, qr_code_path="/static/qr_codes/bin.png")
-    item = Item(name="Widget", room=room, container=container, quantity=2)
-    db_session.add_all([floor, room, container, item])
-    db_session.commit()
+def test_get_containers_paginated_api_returns_first_page(client, db_session, room):
+    create_containers(db_session, room.id, 30)
+    resp = client.get("/containers/?page=1")
+    assert_pagination_api_response(resp, 200, 30, 1, 25)
 
-    resp = client.get("/containers/")
-    assert resp.status_code == 200
+def test_get_containers_paginated_api_returns_second_page(client, db_session, room):
+    create_containers(db_session, room.id, 30)
+    resp = client.get("/containers/?page=2")
+    assert_pagination_api_response(resp, 200, 30, 2, 5)
 
-    data = resp.json()
-    assert isinstance(data, list)
-    assert data[0]["name"] == "Bin"
-    assert data[0]["room_id"] == room.id
-    assert data[0]["item_count"] == 1
+def test_get_containers_paginated_api_empty_page(client, db_session, room):
+    create_containers(db_session, room.id, 10)
+    resp = client.get("/containers/?page=2")
+    assert_pagination_api_response(resp, 200, 10, 2, 0)
 
+def test_get_containers_paginated_api_no_containers(client):
+    resp = client.get("/containers/?page=1")
+    assert_pagination_api_response(resp, 200, 0, 1, 0)
 
-def test_get_container_api(client, db_session):
-    floor = Floor(name="Second", floor_number=2)
-    room = Room(name="Room B", floor=floor)
-    container = Container(name="Crate", room=room, qr_code_path="/static/qr_codes/crate.png")
-    item = Item(name="Cable", room=room, container=container, quantity=3)
-    db_session.add_all([floor, room, container, item])
+def test_get_container_api(client, db_session, room):
+    container = Container(name="Crate", room_id=room.id, qr_code_path="/static/qr_codes/crate.png")
+    db_session.add(container)
     db_session.commit()
 
     resp = client.get(f"/containers/{container.id}")
@@ -32,5 +31,5 @@ def test_get_container_api(client, db_session):
     payload = resp.json()
     assert payload["name"] == "Crate"
     assert payload["room_id"] == room.id
-    assert payload["item_count"] == 1
-    assert payload["items"][0]["name"] == "Cable"
+    assert payload["qr_code_path"] == "/static/qr_codes/crate.png"
+    assert payload["item_count"] == 0

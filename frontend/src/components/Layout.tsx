@@ -10,10 +10,10 @@ const navItems = [
 
 export default function Layout() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Top Navbar */}
       <header 
-        className="sticky top-0 z-50 h-14 flex items-center justify-between px-6 border-b"
+        className="sticky top-0 z-50 h-14 flex-shrink-0 flex items-center justify-between px-6 border-b"
         style={{ 
           backgroundColor: 'var(--gunmetal-900)', 
           borderColor: 'var(--gunmetal-700)' 
@@ -53,10 +53,10 @@ export default function Layout() {
         </div>
       </header>
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
         <aside 
-          className="w-56 border-r flex-shrink-0"
+          className="w-56 border-r flex-shrink-0 overflow-hidden"
           style={{ 
             backgroundColor: 'var(--gunmetal-900)', 
             borderColor: 'var(--gunmetal-700)' 

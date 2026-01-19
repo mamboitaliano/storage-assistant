@@ -1,7 +1,22 @@
 from sqlalchemy.orm import Session
 
 from ..models import Item
-from ..schemas.items import ItemUpdate, ItemResponse
+from ..schemas.items import ItemUpdate, ItemResponse, PaginatedItemResponse
+
+PAGE_SIZE = 25
+
+def get_items_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE) -> PaginatedItemResponse:
+    """Get paginated items"""
+    total = db.query(Item).count()
+    offset = (page - 1) * page_size
+    items = db.query(Item).offset(offset).limit(page_size).all()
+    
+    return PaginatedItemResponse(
+        total=total,
+        page=page,
+        pageSize=page_size,
+        data=items,
+    )
 
 def get_items(db: Session) -> list[Item]:
     items = db.query(Item).all()
@@ -42,6 +57,7 @@ def delete_item(db: Session, item_id: int, quantity: int | None = None) -> dict 
     if quantity and quantity < item.quantity:
         item.quantity -= quantity
         db.commit()
+        db.refresh(item)
         return {"message": "Item quantity reduced", "id": item.id, "quantity": item.quantity}
 
     db.delete(item)

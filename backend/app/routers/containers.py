@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -7,6 +7,7 @@ from ..schemas.containers import (
     ContainerResponse,
     ContainerDetailResponse,
     ContainerItemCreate,
+    PaginatedContainerResponse,
 )
 from ..schemas.items import ItemResponse
 from ..services import containers as containers_service
@@ -18,10 +19,10 @@ def create_container(data: ContainerCreate, db: Session = Depends(get_db)): # cr
     """Create a new container and generate its QR code"""
     return containers_service.create_container(db, data)
 
-@router.get("/", response_model=list[ContainerResponse])
-def list_containers(db: Session = Depends(get_db)):
+@router.get("/", response_model=PaginatedContainerResponse)
+def list_containers(page: int = Query(1, ge=1),db: Session = Depends(get_db)):
     """List all containers"""
-    return containers_service.list_containers(db)
+    return containers_service.list_containers_paginated(db, page=page)
 
 @router.get("/{container_id}", response_model=ContainerDetailResponse)
 def get_container(container_id: int, db: Session = Depends(get_db)):

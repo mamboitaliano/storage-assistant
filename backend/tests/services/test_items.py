@@ -1,28 +1,13 @@
-import pytest
-from app.models import Item, Room, Floor
+from app.models import Item
 from app.schemas.items import ItemUpdate
 from app.services import items as items_service
-
-@pytest.fixture
-def room(db_session):
-    f = Floor(name="Test Floor", floor_number=1)
-    db_session.add(f)
-    db_session.commit()
-
-    r = Room(name="Test Room", floor_id=f.id)
-    db_session.add(r)
-    db_session.commit()
-    return r
-
+from tests.helpers import create_items, assert_pagination_service_response
 
 def test_update_item(db_session, room):
-    item = Item(name="Widget", room_id=room.id, quantity=1, container_id=None)
-    db_session.add(item)
-    db_session.commit()
-
+    items = create_items(db_session, None, room.id, 1)
     updated = items_service.update_item(
         db_session,
-        item.id,
+        items[0].id,
         ItemUpdate(name="Gadget", quantity=5, room_id=room.id, container_id=None),
     )
 
@@ -32,23 +17,37 @@ def test_update_item(db_session, room):
     assert updated.room_id == room.id
     assert updated.container_id is None
 
-
 def test_delete_item_reduces_quantity(db_session, room):
-    item = Item(name="Screws", room_id=room.id, quantity=10, container_id=None)
-    db_session.add(item)
-    db_session.commit()
+    items = create_items(db_session, None, room.id, quantity=10, count=1)
 
-    resp = items_service.delete_item(db_session, item.id, quantity=4)
+    resp = items_service.delete_item(db_session, items[0].id, quantity=4)
     assert resp["message"] == "Item quantity reduced"
-    db_session.refresh(item)
-    assert item.quantity == 6
-
+    db_session.refresh(items[0])
+    assert items[0].quantity == 6
 
 def test_delete_item_removes_when_no_quantity_given(db_session, room):
-    item = Item(name="Box", room_id=room.id, quantity=1, container_id=None)
-    db_session.add(item)
-    db_session.commit()
-
-    resp = items_service.delete_item(db_session, item.id)
+    items = create_items(db_session, None, room.id, quantity=1, count=1)
+    resp = items_service.delete_item(db_session, items[0].id)
     assert resp["message"] == "Item deleted"
-    assert db_session.query(Item).filter_by(id=item.id).first() is None
+    assert db_session.query(Item).filter_by(id=items[0].id).first() is None
+
+# Pagination tests ------------------------------------------------------------
+
+def test_get_items_paginated_returns_first_page(db_session, room):
+    create_items(db_session, None, room.id, quantity=1, count=30)
+    result = items_service.get_items_paginated(db_session, page=1, page_size=25)
+    assert_pagination_service_response(result, 30, 1, 25, 25)
+
+def test_get_items_paginated_returns_second_page(db_session, room):
+    create_items(db_session, None, room.id, quantity=1, count=30)
+    result = items_service.get_items_paginated(db_session, page=2, page_size=25)
+    assert_pagination_service_response(result, 30, 2, 25, 5)
+
+def test_get_items_paginated_empty_page(db_session, room):
+    create_items(db_session, None, room.id, quantity=1, count=10)
+    result = items_service.get_items_paginated(db_session, page=2, page_size=25)
+    assert_pagination_service_response(result, 10, 2, 25, 0)
+
+def test_get_items_paginated_no_items(db_session):
+    result = items_service.get_items_paginated(db_session, page=1, page_size=25)
+    assert_pagination_service_response(result, 0, 1, 25, 0)

@@ -6,7 +6,7 @@ fake = Faker()
 def seed_containers(db, rooms) -> list[Container]:
     containers: list[Container] = []
     for room in rooms:
-        for _ in range(fake.random_int(min=1, max=2)):
+        for _ in range(fake.random_int(min=30, max=100)):
             containers.append(
                 Container(
                     name=f"{fake.word().title()} Bin",

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -8,10 +8,9 @@ from ..services import items as items_service
 router = APIRouter()
 
 @router.get("/")
-def get_items(db: Session = Depends(get_db)):
+def get_items(page: int = Query(1, ge=1),db: Session = Depends(get_db)):
     """Get all items"""
-    items = items_service.get_items(db)
-    return items
+    return items_service.get_items_paginated(db, page=page)
 
 @router.put("/{item_id}")
 def update_item(item_id: int, data: ItemUpdate, db: Session = Depends(get_db)):
