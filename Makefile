@@ -36,3 +36,6 @@ test-frontend:
 
 test-all:
 	make test-backend & make test-frontend
+
+seed-data:
+	docker compose -f docker-compose.dev.yml exec -w /app/backend app python -m app.seed.runner

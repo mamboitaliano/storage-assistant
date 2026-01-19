@@ -1,27 +1,43 @@
-import PageHeader from "../components/PageHeader";
-import { useApi } from "../hooks/useApi";
+import { usePaginatedApi } from "../hooks/usePaginatedApi";
 import { floorsApi } from "../api";
+import Paginator from "@/components/Paginator";
+import PageHeader from "../components/PageHeader";
 import FloorsTable from "@/features/floors/FloorsTable";
 
 export default function Floors() {
-    const { data, loading, error } = useApi(floorsApi.list);
+    const { 
+        data, 
+        loading, 
+        error, 
+        page, 
+        setPage, 
+        totalPages, 
+        hasMultiplePages 
+      } = usePaginatedApi(floorsApi.list);
 
     if (loading) {
-        return <div className="text-sm text-muted-foreground">Loading floors...</div>;
+        return <div>Loading...</div>;
     }
     
     if (error) {
-        return <div className="text-sm text-red-400">Error: {error.message}</div>;
+        return <div>Error: {error.message}</div>;
     }
 
     if (!data) {
-        return <div className="text-sm text-muted-foreground">No floors found.</div>;
+        return <div>No data</div>;
     }
 
     return (
-        <div className="space-y-6">
+        <div className="flex flex-col h-full">
             <PageHeader title="Floors" />
-            <FloorsTable data={data} />
+            <div className="flex-1 min-h-0 mt-6 overflow-auto">
+                <FloorsTable data={data} />
+            </div>
+            {hasMultiplePages && (
+                <div className="flex-shrink-0 py-4">
+                    <Paginator page={page} totalPages={totalPages} onPageChange={setPage} />
+                </div>
+            )}
         </div>
     )
 };
