@@ -13,10 +13,14 @@ class ItemContainerResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class ItemCreate(BaseModel):
+class ItemCreateBase(BaseModel):
+    """Base schema for item creation - used by nested endpoints"""
     name: str
-    quantity: int
-    room_id: int | None = None
+    quantity: int = 1
+
+class ItemCreate(ItemCreateBase):
+    """Schema for POST /items - requires room_id"""
+    room_id: int  # Required - room must exist
     container_id: int | None = None
 
 class ItemUpdate(BaseModel):

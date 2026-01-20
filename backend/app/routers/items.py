@@ -2,10 +2,22 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..schemas.items import ItemUpdate, ItemResponse
+from ..schemas.items import ItemCreate, ItemUpdate, ItemResponse
 from ..services import items as items_service
 
 router = APIRouter()
+
+@router.post("/", response_model=ItemResponse, status_code=201)
+def create_item(data: ItemCreate, db: Session = Depends(get_db)):
+    """Create a new item assigned to a room and optionally a container."""
+    item, error = items_service.create_item(db, data=data)
+    
+    if error == "room_not_found":
+        raise HTTPException(status_code=404, detail="Room not found")
+    if error == "container_not_found":
+        raise HTTPException(status_code=404, detail="Container not found")
+    
+    return item
 
 @router.get("/")
 def get_items(page: int = Query(1, ge=1),db: Session = Depends(get_db)):

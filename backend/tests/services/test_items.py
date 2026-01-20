@@ -1,7 +1,60 @@
 from app.models import Item
-from app.schemas.items import ItemUpdate
+from app.schemas.items import ItemCreate, ItemUpdate
 from app.services import items as items_service
 from tests.helpers import create_items, assert_pagination_service_response
+
+# Create item tests ---------------------------------------------------------------
+
+def test_create_item_with_room_only(db_session, room):
+    """Item can be created with just a room assignment"""
+    data = ItemCreate(name="Screwdriver", quantity=2, room_id=room.id)
+    item, error = items_service.create_item(db_session, data)
+    
+    assert error is None
+    assert item is not None
+    assert item.name == "Screwdriver"
+    assert item.quantity == 2
+    assert item.room_id == room.id
+    assert item.room.id == room.id
+    assert item.room.name == room.name
+    assert item.container_id is None
+    assert item.container is None
+
+
+def test_create_item_with_room_and_container(db_session, room, container):
+    """Item can be created with room and container assignment"""
+    data = ItemCreate(name="Hammer", quantity=1, room_id=room.id, container_id=container.id)
+    item, error = items_service.create_item(db_session, data)
+    
+    assert error is None
+    assert item is not None
+    assert item.name == "Hammer"
+    assert item.room_id == room.id
+    assert item.room.id == room.id
+    assert item.container_id == container.id
+    assert item.container.id == container.id
+    assert item.container.name == container.name
+
+
+def test_create_item_room_not_found(db_session):
+    """Returns error when room doesn't exist"""
+    data = ItemCreate(name="Widget", quantity=1, room_id=99999)
+    item, error = items_service.create_item(db_session, data)
+    
+    assert item is None
+    assert error == "room_not_found"
+
+
+def test_create_item_container_not_found(db_session, room):
+    """Returns error when container doesn't exist"""
+    data = ItemCreate(name="Widget", quantity=1, room_id=room.id, container_id=99999)
+    item, error = items_service.create_item(db_session, data)
+    
+    assert item is None
+    assert error == "container_not_found"
+
+
+# Update item tests ---------------------------------------------------------------
 
 def test_update_item(db_session, room):
     items = create_items(db_session, None, room.id, 1)
