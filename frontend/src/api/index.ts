@@ -18,6 +18,8 @@ export interface Item {
     container_id: number | null;
     quantity: number;
     created_at: string;
+    room: Room;
+    container: Container | null;
 }
 
 export interface Container {
