@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from ..models import Item
 from ..schemas.items import ItemUpdate, ItemResponse, PaginatedItemResponse
@@ -9,7 +9,13 @@ def get_items_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE) 
     """Get paginated items"""
     total = db.query(Item).count()
     offset = (page - 1) * page_size
-    items = db.query(Item).offset(offset).limit(page_size).all()
+    items = (
+        db.query(Item)
+        .options(joinedload(Item.room), joinedload(Item.container))
+        .offset(offset)
+        .limit(page_size)
+        .all()
+    )
     
     return PaginatedItemResponse(
         total=total,
@@ -23,7 +29,12 @@ def get_items(db: Session) -> list[Item]:
     return items
 
 def update_item(db: Session, item_id: int, data: ItemUpdate) -> ItemResponse | None:
-    item = db.query(Item).filter(Item.id == item_id).first()
+    item = (
+        db.query(Item)
+        .options(joinedload(Item.room), joinedload(Item.container))
+        .filter(Item.id == item_id)
+        .first()
+    )
     if not item:
         return None
 
@@ -39,14 +50,7 @@ def update_item(db: Session, item_id: int, data: ItemUpdate) -> ItemResponse | N
     db.commit()
     db.refresh(item)
 
-    return ItemResponse(
-        id=item.id,
-        name=item.name,
-        room_id=item.room_id,
-        container_id=item.container_id,
-        quantity=item.quantity,
-        created_at=item.created_at,
-    )
+    return ItemResponse.model_validate(item)
 
 
 def delete_item(db: Session, item_id: int, quantity: int | None = None) -> dict | None:

@@ -1,5 +1,5 @@
 from math import ceil
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from ..models import Room, Item
 from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemsResponse, RoomItemCreate, PaginatedRoomResponse
@@ -61,6 +61,7 @@ def create_item_in_room(db: Session, room_id: int, data: RoomItemCreate) -> Item
 
     existing_item = (
         db.query(Item)
+        .options(joinedload(Item.room), joinedload(Item.container))
         .filter(
             Item.room_id == room_id,
             Item.container_id == None,
@@ -73,15 +74,7 @@ def create_item_in_room(db: Session, room_id: int, data: RoomItemCreate) -> Item
         existing_item.quantity += data.quantity
         db.commit()
         db.refresh(existing_item)
-
-        return ItemResponse(
-            id=existing_item.id,
-            name=existing_item.name,
-            room_id=existing_item.room_id,
-            container_id=existing_item.container_id,
-            quantity=existing_item.quantity,
-            created_at=existing_item.created_at,
-        )
+        return ItemResponse.model_validate(existing_item)
 
     item = Item(
         name=data.name,
@@ -93,14 +86,7 @@ def create_item_in_room(db: Session, room_id: int, data: RoomItemCreate) -> Item
     db.commit()
     db.refresh(item)
 
-    return ItemResponse(
-        id=item.id,
-        name=item.name,
-        room_id=item.room_id,
-        container_id=item.container_id,
-        quantity=item.quantity,
-        created_at=item.created_at,
-    )
+    return ItemResponse.model_validate(item)
 
 def list_items_in_room(
     db: Session,
@@ -120,6 +106,7 @@ def list_items_in_room(
 
     items = (
         db.query(Item)
+        .options(joinedload(Item.room), joinedload(Item.container))
         .filter(Item.room_id == room_id)
         .offset(skip)
         .limit(page_size)

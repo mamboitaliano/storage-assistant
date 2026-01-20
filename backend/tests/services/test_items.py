@@ -51,3 +51,36 @@ def test_get_items_paginated_empty_page(db_session, room):
 def test_get_items_paginated_no_items(db_session):
     result = items_service.get_items_paginated(db_session, page=1, page_size=25)
     assert_pagination_service_response(result, 0, 1, 25, 0)
+
+# Nested relationship tests -------------------------------------------------------
+
+def test_get_items_paginated_includes_room(db_session, room):
+    """Items should include nested room with id and name"""
+    create_items(db_session, None, room.id, quantity=1, count=1)
+    result = items_service.get_items_paginated(db_session, page=1, page_size=25)
+    
+    assert len(result.data) == 1
+    item = result.data[0]
+    assert item.room is not None
+    assert item.room.id == room.id
+    assert item.room.name == room.name
+
+def test_get_items_paginated_includes_container_when_present(db_session, room, container):
+    """Items in a container should include nested container with id and name"""
+    create_items(db_session, container.id, room.id, quantity=1, count=1)
+    result = items_service.get_items_paginated(db_session, page=1, page_size=25)
+    
+    assert len(result.data) == 1
+    item = result.data[0]
+    assert item.container is not None
+    assert item.container.id == container.id
+    assert item.container.name == container.name
+
+def test_get_items_paginated_container_is_none_when_not_in_container(db_session, room):
+    """Items not in a container should have container as None"""
+    create_items(db_session, None, room.id, quantity=1, count=1)
+    result = items_service.get_items_paginated(db_session, page=1, page_size=25)
+    
+    assert len(result.data) == 1
+    item = result.data[0]
+    assert item.container is None

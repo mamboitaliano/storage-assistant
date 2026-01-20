@@ -1,7 +1,7 @@
 import os
 
 import qrcode
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from ..database import DATA_DIR
 from ..models import Container, Item
@@ -148,6 +148,7 @@ def create_item_in_container(db: Session, container_id: int, data: ContainerItem
 
     existing_item = (
         db.query(Item)
+        .options(joinedload(Item.room), joinedload(Item.container))
         .filter(
             Item.container_id == container_id,
             Item.name.ilike(data.name),
@@ -160,14 +161,7 @@ def create_item_in_container(db: Session, container_id: int, data: ContainerItem
         db.commit()
         db.refresh(existing_item)
 
-        return ItemResponse(
-            id=existing_item.id,
-            name=existing_item.name,
-            room_id=existing_item.room_id,
-            container_id=existing_item.container_id,
-            quantity=existing_item.quantity,
-            created_at=existing_item.created_at,
-        )
+        return ItemResponse.model_validate(existing_item)
 
     item = Item(
         name=data.name,
@@ -180,11 +174,4 @@ def create_item_in_container(db: Session, container_id: int, data: ContainerItem
     db.commit()
     db.refresh(item)
 
-    return ItemResponse(
-        id=item.id,
-        name=item.name,
-        room_id=item.room_id,
-        container_id=item.container_id,
-        quantity=item.quantity,
-        created_at=item.created_at,
-    )
+    return ItemResponse.model_validate(item)

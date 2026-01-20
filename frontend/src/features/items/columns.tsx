@@ -32,6 +32,16 @@ export const itemColumns: ColumnDef<Item>[] = [
     cell: ({ row }) => row.original.quantity,
   },
   {
+    accessorKey: "room",
+    header: "Room",
+    cell: ({ row }) => row.original.room.name ?? "Untitled",
+  },
+  {
+    accessorKey: "container",
+    header: "Container",
+    cell: ({ row }) => row.original.container?.name ?? "Untitled",
+  },
+  {
     id: "actions",
     cell: ({ row }: { row: Row<Item> }) => {
       const item = row.original;

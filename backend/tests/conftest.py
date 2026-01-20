@@ -8,7 +8,7 @@ from sqlalchemy.pool import StaticPool
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.database import Base, get_db
-from app.models import Floor, Room
+from app.models import Floor, Room, Container
 from app.main import app
 
 # shared in-memory SQLite test engine with FK support
@@ -66,3 +66,11 @@ def room(db_session, floor):
     db_session.add(room)
     db_session.commit()
     return room
+
+# Container fixture -----------------------------------------------------------
+@pytest.fixture(scope="function")
+def container(db_session, room):
+    container = Container(name="Test container", room_id=room.id)
+    db_session.add(container)
+    db_session.commit()
+    return container
