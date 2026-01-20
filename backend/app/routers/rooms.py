@@ -16,7 +16,7 @@ def create_room(data: RoomCreate, db: Session = Depends(get_db)):
 @router.get("/", response_model=PaginatedRoomResponse)
 def list_rooms(page: int = Query(1, ge=1), db: Session = Depends(get_db)):
     """List all rooms paginated"""
-    return rooms_service.list_rooms_paginated(db, page=page)
+    return rooms_service.get_rooms_paginated(db, page=page)
 
 @router.get("/{room_id}", response_model=RoomResponse)
 def get_room(room_id: int, db: Session = Depends(get_db)):
