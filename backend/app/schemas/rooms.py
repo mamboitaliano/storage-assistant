@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from pydantic import BaseModel, ConfigDict
 
-from .items import ItemResponse, PaginatedItemResponse, ItemCreate
+from .items import ItemResponse, PaginatedItemResponse, ItemCreateBase
 
 class RoomCreate(BaseModel):
     name: str | None = None
@@ -25,8 +25,8 @@ class PaginatedRoomResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-class RoomItemCreate(ItemCreate):
-    """Proxy schema for creating items within a room context."""
+class RoomItemCreate(ItemCreateBase):
+    """Schema for creating items within a room context (room_id from URL)."""
 
 class RoomItemsResponse(PaginatedItemResponse):
     """Proxy schema for paginated items within a room context."""
