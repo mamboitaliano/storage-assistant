@@ -39,3 +39,6 @@ test-all:
 
 seed-data:
 	docker compose -f docker-compose.dev.yml exec -w /app/backend app python -m app.seed.runner
+
+tail-logs:
+	docker compose -f docker-compose.dev.yml logs -f

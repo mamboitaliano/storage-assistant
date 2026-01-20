@@ -1,7 +1,8 @@
 from math import ceil
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from ..models import Room, Item
+from ..models import Room, Item, Container
 from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemsResponse, RoomItemCreate, PaginatedRoomResponse
 from ..schemas.items import ItemResponse
 
@@ -21,19 +22,33 @@ def create_room(db: Session, data: RoomCreate) -> RoomResponse:
         created_at=room.created_at,
     )
 
-def list_rooms_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE) -> PaginatedRoomResponse:
+def get_rooms_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE) -> PaginatedRoomResponse:
     """List rooms with pagination"""
     total = db.query(Room).count()
     offset = (page - 1) * page_size
-    rooms = db.query(Room).offset(offset).limit(page_size).all()
+    rooms = (
+        db.query(
+            Room,
+            func.count(func.distinct(Container.id)).label("container_count"),
+            func.count(func.distinct(Item.id)).label("item_count"),
+        )
+        .outerjoin(Container, Room.id == Container.room_id)
+        .outerjoin(Item, Room.id == Item.room_id)
+        .group_by(Room.id)
+        .offset(offset)
+        .limit(page_size)
+        .all()
+    )
 
     return PaginatedRoomResponse(
         data=[
             RoomResponse(
-                id=r.id,
-                name=r.name,
-                floor_id=r.floor_id,
-                created_at=r.created_at,
+                id=r.Room.id,
+                name=r.Room.name,
+                floor_id=r.Room.floor_id,
+                created_at=r.Room.created_at,
+                container_count=r.container_count,
+                item_count=r.item_count,
             )
             for r in rooms
         ],
@@ -43,15 +58,29 @@ def list_rooms_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE)
     )
 
 def get_room(db: Session, room_id: int) -> RoomResponse | None:
-    room = db.query(Room).filter(Room.id == room_id).first()
-    if not room:
+    result = (
+        db.query(
+            Room,
+            func.count(func.distinct(Container.id)).label('container_count'),
+            func.count(func.distinct(Item.id)).label('item_count'),
+        )
+        .outerjoin(Container, Room.id == Container.room_id)
+        .outerjoin(Item, Room.id == Item.room_id)
+        .filter(Room.id == room_id)
+        .group_by(Room.id)
+        .first()
+    )
+
+    if not result:
         return None
 
     return RoomResponse(
-        id=room.id,
-        name=room.name,
-        floor_id=room.floor_id,
-        created_at=room.created_at,
+        id=result.Room.id,
+        name=result.Room.name,
+        floor_id=result.Room.floor_id,
+        created_at=result.Room.created_at,
+        container_count=result.container_count,
+        item_count=result.item_count,
     )
 
 def create_item_in_room(db: Session, room_id: int, data: RoomItemCreate) -> ItemResponse | None:
