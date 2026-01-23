@@ -34,3 +34,41 @@ def test_get_floor_detail_api(client, db_session):
     assert payload["name"] == "Second"
     assert payload["room_count"] == 1
     assert payload["rooms"][0]["name"] == "Room B"
+
+# Dropdown endpoint API tests -----------------------------------------------------
+
+def test_get_floor_rooms_api(client, db_session):
+    """GET /floors/{id}/rooms returns list of RoomOption"""
+    floor = Floor(name="First", floor_number=1)
+    room1 = Room(name="Living Room", floor=floor)
+    room2 = Room(name="Kitchen", floor=floor)
+    db_session.add_all([floor, room1, room2])
+    db_session.commit()
+
+    resp = client.get(f"/floors/{floor.id}/rooms")
+    assert resp.status_code == 200
+    
+    data = resp.json()
+    assert len(data) == 2
+    # Verify lightweight response (id and name only)
+    names = {r["name"] for r in data}
+    assert "Living Room" in names
+    assert "Kitchen" in names
+
+
+def test_get_floor_rooms_api_empty(client, db_session):
+    """GET /floors/{id}/rooms returns empty list when no rooms"""
+    floor = Floor(name="Empty Floor", floor_number=1)
+    db_session.add(floor)
+    db_session.commit()
+
+    resp = client.get(f"/floors/{floor.id}/rooms")
+    assert resp.status_code == 200
+    assert resp.json() == []
+
+
+def test_get_floor_rooms_api_floor_not_found(client):
+    """GET /floors/{id}/rooms returns 404 for non-existent floor"""
+    resp = client.get("/floors/99999/rooms")
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "Floor not found"

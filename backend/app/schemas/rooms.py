@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from pydantic import BaseModel, ConfigDict
 
-from .items import ItemResponse, PaginatedItemResponse, ItemCreateBase
+from .items import PaginatedItemResponse, ItemCreateBase
 
 class RoomCreate(BaseModel):
     name: str | None = None
@@ -22,6 +22,13 @@ class PaginatedRoomResponse(BaseModel):
     total: int
     page: int
     pageSize: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+class RoomOption(BaseModel):
+    """Lightweight room for dropdowns"""
+    id: int
+    name: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

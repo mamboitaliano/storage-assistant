@@ -46,3 +46,41 @@ def test_list_floors_paginated_empty_page(db_session):
 def test_list_floors_paginated_no_floors(db_session):
     result = floors_service.list_floors_paginated(db_session, page=1, page_size=25)
     assert_pagination_service_response(result, 0, 1, 25, 0)
+
+# Dropdown endpoint tests ---------------------------------------------------------
+
+def test_get_rooms_for_floor_returns_room_options(db_session):
+    """get_rooms_for_floor returns lightweight RoomOption list"""
+    floors = create_floors(db_session, 1)
+    rooms = create_rooms(db_session, floors[0].id, 3)
+    
+    result = floors_service.get_rooms_for_floor(db_session, floors[0].id)
+    
+    assert len(result) == 3
+    # Verify it returns RoomOption (only id and name)
+    for room_option in result:
+        assert hasattr(room_option, 'id')
+        assert hasattr(room_option, 'name')
+        # Should NOT have full room fields
+        assert not hasattr(room_option, 'floor_id') or room_option.floor_id is None
+        assert not hasattr(room_option, 'container_count')
+
+
+def test_get_rooms_for_floor_empty_when_no_rooms(db_session):
+    """get_rooms_for_floor returns empty list when floor has no rooms"""
+    floors = create_floors(db_session, 1)
+    
+    result = floors_service.get_rooms_for_floor(db_session, floors[0].id)
+    
+    assert result == []
+
+
+def test_get_rooms_for_floor_only_returns_rooms_for_specified_floor(db_session):
+    """get_rooms_for_floor only returns rooms belonging to the specified floor"""
+    floors = create_floors(db_session, 2)
+    create_rooms(db_session, floors[0].id, 3)  # 3 rooms on floor 1
+    create_rooms(db_session, floors[1].id, 2)  # 2 rooms on floor 2
+    
+    result = floors_service.get_rooms_for_floor(db_session, floors[0].id)
+    
+    assert len(result) == 3

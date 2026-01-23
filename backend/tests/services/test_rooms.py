@@ -50,7 +50,7 @@ def test_room_response_includes_item_and_container_counts(db_session, floor):
     item = Item(name="Test item", room=room, quantity=1)
     db_session.add_all([room, container, item])
     db_session.commit()
-    result = rooms_service.get_room(db_session, room.id)
+    result = rooms_service.get_room_detail(db_session, room.id)
     assert result is not None
     assert result.item_count == 1
     assert result.container_count == 1
@@ -68,3 +68,41 @@ def test_get_rooms_paginated_includes_item_and_container_counts(db_session, floo
     for room in result.data:
         assert room.item_count == 10, f"Room {room.id} has item_count={room.item_count}, expected 10"
         assert room.container_count == 10, f"Room {room.id} has container_count={room.container_count}, expected 10"
+
+# Dropdown endpoint tests ---------------------------------------------------------
+
+def test_get_containers_for_room_returns_container_options(db_session, floor):
+    """get_containers_for_room returns lightweight ContainerOption list"""
+    rooms = create_rooms(db_session, floor.id, 1)
+    containers = create_containers(db_session, rooms[0].id, 3)
+    
+    result = rooms_service.get_containers_for_room(db_session, rooms[0].id)
+    
+    assert len(result) == 3
+    # Verify it returns ContainerOption (only id and name)
+    for container_option in result:
+        assert hasattr(container_option, 'id')
+        assert hasattr(container_option, 'name')
+        # Should NOT have full container fields
+        assert not hasattr(container_option, 'room_id') or container_option.room_id is None
+        assert not hasattr(container_option, 'item_count')
+
+
+def test_get_containers_for_room_empty_when_no_containers(db_session, floor):
+    """get_containers_for_room returns empty list when room has no containers"""
+    rooms = create_rooms(db_session, floor.id, 1)
+    
+    result = rooms_service.get_containers_for_room(db_session, rooms[0].id)
+    
+    assert result == []
+
+
+def test_get_containers_for_room_only_returns_containers_for_specified_room(db_session, floor):
+    """get_containers_for_room only returns containers belonging to the specified room"""
+    rooms = create_rooms(db_session, floor.id, 2)
+    create_containers(db_session, rooms[0].id, 3)  # 3 containers in room 1
+    create_containers(db_session, rooms[1].id, 2)  # 2 containers in room 2
+    
+    result = rooms_service.get_containers_for_room(db_session, rooms[0].id)
+    
+    assert len(result) == 3
