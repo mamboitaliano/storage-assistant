@@ -1,10 +1,14 @@
+import { useNavigate } from "react-router-dom";
 import { usePaginatedApi } from "../hooks/usePaginatedApi";
 import { itemsApi } from "../api";
 import Paginator from "@/components/Paginator";
-import PageHeader from "../components/PageHeader";
+import PageHeader from "@/components/PageHeader";
 import ItemsTable from "@/features/items/ItemsTable";
+import { Button } from "@/components/ui/button";
+import { PlusIcon } from "lucide-react";
 
 export default function Items() {
+    const navigate = useNavigate();
     const { 
         data, 
         loading, 
@@ -27,9 +31,17 @@ export default function Items() {
         return <div>No data</div>;
     }
 
+    const newItemBtn = () => {
+        return (
+            <Button size="sm" onClick={() => {
+                navigate("/items/create");
+            }}><PlusIcon /> Add Item</Button>
+        )
+    }
+
     return (
         <div className="flex flex-col h-full">
-            <PageHeader title="Items" />
+            <PageHeader title="Items" action={newItemBtn()} />
             <div className="flex-1 min-h-0 mt-6 overflow-auto">
                 <ItemsTable data={data} />
             </div>

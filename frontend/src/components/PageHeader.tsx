@@ -1,7 +1,7 @@
-export default function PageHeader({ title }: { title: string }) {
+export default function PageHeader({ title, action }: { title: string, action?: React.ReactNode }) {
     return (
         <div
-            className="flex flex-col gap-4 pb-4 mb-6 border-b"
+            className="flex flex-row justify-between items-center gap-4 pb-4 mb-6 border-b"
             style={{ borderColor: 'var(--gunmetal-700)' }}
         >
             <h1
@@ -10,6 +10,11 @@ export default function PageHeader({ title }: { title: string }) {
             >
                 { title }
             </h1>
+            {action && (
+                <div className="flex justify-end items-center">
+                    {action}
+                </div>
+            )}
         </div>
     );
 };
