@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemCreate, PaginatedRoomResponse
+from ..schemas.containers import ContainerOption
 from ..schemas.items import ItemResponse, PaginatedItemResponse
 from ..services import rooms as rooms_service
 
@@ -21,11 +22,19 @@ def list_rooms(page: int = Query(1, ge=1), db: Session = Depends(get_db)):
 @router.get("/{room_id}", response_model=RoomResponse)
 def get_room(room_id: int, db: Session = Depends(get_db)):
     """Get a room by ID"""
-    room = rooms_service.get_room(db, room_id)
+    room = rooms_service.get_room_detail(db, room_id)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
     
     return room
+
+@router.get("/{room_id}/containers", response_model=list[ContainerOption])
+def get_room_containers(room_id: int, db: Session = Depends(get_db)):
+    """Get all containers for a room"""
+    if not rooms_service.get_room(db, room_id):
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    return rooms_service.get_containers_for_room(db, room_id)
 
 @router.post("/{room_id}/items", response_model=ItemResponse)
 def create_item(room_id: int, data: RoomItemCreate, db: Session = Depends(get_db)):

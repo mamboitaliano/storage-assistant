@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..services import floors as floors_service
 from ..schemas.floors import FloorCreate, FloorResponse, PaginatedFloorResponse
+from ..schemas.rooms import RoomOption
 
 router = APIRouter()
 
@@ -25,6 +26,15 @@ def get_floor(floor_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Floor not found")
 
     return floor
+
+@router.get("/{floor_id}/rooms", response_model=list[RoomOption])
+def get_floor_rooms(floor_id: int, db: Session = Depends(get_db)):
+    """Get all rooms for a floor"""
+    
+    if not floors_service.get_floor(db, floor_id):
+        raise HTTPException(status_code=404, detail="Floor not found")
+
+    return floors_service.get_rooms_for_floor(db, floor_id)
 
 @router.delete("/{floor_id}")
 async def delete_floor(floor_id: int, db: Session = Depends(get_db)):

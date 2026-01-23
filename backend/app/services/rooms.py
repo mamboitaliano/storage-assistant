@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 from ..models import Room, Item, Container
 from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemsResponse, RoomItemCreate, PaginatedRoomResponse
 from ..schemas.items import ItemResponse
+from ..schemas.containers import ContainerOption
 
 PAGE_SIZE = 25
 
@@ -57,7 +58,8 @@ def get_rooms_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE) 
         pageSize=page_size,
     )
 
-def get_room(db: Session, room_id: int) -> RoomResponse | None:
+def get_room_detail(db: Session, room_id: int) -> RoomResponse | None:
+    """Get a room by ID with container and item counts"""
     result = (
         db.query(
             Room,
@@ -83,8 +85,13 @@ def get_room(db: Session, room_id: int) -> RoomResponse | None:
         item_count=result.item_count,
     )
 
+def get_containers_for_room(db: Session, room_id: int) -> list[ContainerOption]:
+    containers = db.query(Container).filter(Container.room_id == room_id).all()
+    return [ContainerOption.model_validate(c) for c in containers]
+
 def create_item_in_room(db: Session, room_id: int, data: RoomItemCreate) -> ItemResponse | None:
-    room = db.query(Room).filter(Room.id == room_id).first()
+    room = get_room(db, room_id)
+    
     if not room:
         return None
 
@@ -123,7 +130,8 @@ def list_items_in_room(
     page: int = 1,
     page_size: int = 50,
 ) -> RoomItemsResponse | None:
-    room = db.query(Room).filter(Room.id == room_id).first()
+    room = get_room(db, room_id)
+
     if not room:
         return None
 
@@ -159,3 +167,6 @@ def list_items_in_room(
         page_size=page_size,
         total_pages=total_pages,
     )
+
+def get_room(db: Session, room_id: int) -> Room | None:
+    return db.query(Room).filter(Room.id == room_id).first()

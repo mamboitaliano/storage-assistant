@@ -22,6 +22,13 @@ class PaginatedContainerResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class ContainerOption(BaseModel):
+    """Lightweight container for dropdowns"""
+    id: int
+    name: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
 class ContainerDetailResponse(ContainerResponse):
     items: list[ItemResponse]
 

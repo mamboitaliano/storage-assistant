@@ -5,7 +5,6 @@ from ..schemas.items import ItemCreate, ItemUpdate, ItemResponse, PaginatedItemR
 
 PAGE_SIZE = 25
 
-
 def create_item(db: Session, data: ItemCreate) -> tuple[ItemResponse | None, str | None]:
     """
     Create a new item.
@@ -47,7 +46,6 @@ def create_item(db: Session, data: ItemCreate) -> tuple[ItemResponse | None, str
     )
     
     return ItemResponse.model_validate(item), None
-
 
 def get_items_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE) -> PaginatedItemResponse:
     """Get paginated items"""
@@ -95,7 +93,6 @@ def update_item(db: Session, item_id: int, data: ItemUpdate) -> ItemResponse | N
     db.refresh(item)
 
     return ItemResponse.model_validate(item)
-
 
 def delete_item(db: Session, item_id: int, quantity: int | None = None) -> dict | None:
     item = db.query(Item).filter(Item.id == item_id).first()
