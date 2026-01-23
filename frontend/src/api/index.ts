@@ -30,6 +30,11 @@ export interface Container {
     item_count: number;
 }
 
+export interface ContainerOption {
+    id: number;
+    name: string | null;
+}
+
 export interface ContainerDetail extends Container {
     items: Item[];
 }
@@ -41,6 +46,11 @@ export interface Room {
     created_at: string;
     item_count: number;
     container_count: number;
+}
+
+export interface RoomOption {
+    id: number;
+    name: string | null;
 }
 
 export interface RoomDetail extends Room {
@@ -95,6 +105,10 @@ export const roomsApi = {
         const { data } = await api.get<PaginatedResponse<Room>>(`/rooms/?page=${page}`);
         return data;
     },
+    listContainers: async (roomId: number) => {
+        const { data } = await api.get<ContainerOption[]>(`/rooms/${roomId}/containers`);
+        return data;
+    },
     get: async (id: number) => {
         const { data } = await api.get<Room>(`/rooms/${id}`);
         return data;
@@ -118,6 +132,10 @@ export const floorsApi = {
         const { data } = await api.get<PaginatedResponse<Floor>>(`/floors/?page=${page}`);
         return data;
     },
+    listRooms: async (floorId: number) => {
+        const { data } = await api.get<RoomOption[]>(`/floors/${floorId}/rooms`);
+        return data;
+    },
     get: async (id: number) => {
         const { data } = await api.get<FloorDetail>(`/floors/${id}`);
         return data;
@@ -136,6 +154,14 @@ export const itemsApi = {
     list: async (page: number = 1) => {
         const { data } = await api.get<PaginatedResponse<Item>>(`/items/?page=${page}`);
         return data;
+    },
+    create: async (data: { name: string, room_id: number, container_id?: number | null }) => {
+        const response = await api.post<Item>(`/items/`, {
+            name: data.name,
+            room_id: data.room_id,
+            container_id: data.container_id,
+        });
+        return response.data;
     },
     update: async (id: number, data: { name?: string, quantity?: number }) => {
         const response = await api.put<Item>(`/items/${id}/`, data);
