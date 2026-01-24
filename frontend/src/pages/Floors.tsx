@@ -1,10 +1,14 @@
+import { useNavigate } from "react-router-dom";
 import { usePaginatedApi } from "../hooks/usePaginatedApi";
 import { floorsApi } from "../api";
 import Paginator from "@/components/Paginator";
-import PageHeader from "../components/PageHeader";
+import PageHeader from "@/components/PageHeader";
 import FloorsTable from "@/features/floors/FloorsTable";
+import { Button } from "@/components/ui/button";
+import { PlusIcon } from "lucide-react";
 
 export default function Floors() {
+    const navigate = useNavigate();
     const { 
         data, 
         loading, 
@@ -29,7 +33,14 @@ export default function Floors() {
 
     return (
         <div className="flex flex-col h-full">
-            <PageHeader title="Floors" />
+            <PageHeader 
+                title="Floors" 
+                action={
+                    <Button size="sm" onClick={() => navigate("/floors/create")}>
+                        <PlusIcon /> Add Floor
+                    </Button>
+                } 
+            />
             <div className="flex-1 min-h-0 mt-6 overflow-auto">
                 <FloorsTable data={data} />
             </div>
