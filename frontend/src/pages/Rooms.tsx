@@ -1,10 +1,14 @@
+import { useNavigate } from "react-router-dom";
 import { usePaginatedApi } from "../hooks/usePaginatedApi";
 import { roomsApi } from "../api";
 import Paginator from "@/components/Paginator";
-import PageHeader from "../components/PageHeader";
+import PageHeader from "@/components/PageHeader";
 import RoomsTable from "@/features/rooms/RoomsTable";
+import { Button } from "@/components/ui/button";
+import { PlusIcon } from "lucide-react";
 
 export default function Rooms() {
+    const navigate = useNavigate();
     const { 
         data, 
         loading, 
@@ -29,7 +33,14 @@ export default function Rooms() {
 
     return (
         <div className="flex flex-col h-full">
-            <PageHeader title="Rooms" />
+            <PageHeader 
+                title="Rooms" 
+                action={
+                    <Button size="sm" onClick={() => navigate("/rooms/create")}>
+                        <PlusIcon /> Add Room
+                    </Button>
+                } 
+            />
             <div className="flex-1 min-h-0 mt-6 overflow-auto">
                 <RoomsTable data={data} />
             </div>

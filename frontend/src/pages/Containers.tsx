@@ -38,7 +38,7 @@ export default function Containers() {
                 title="Containers"
                 action={
                     <Button size="sm" onClick={() => navigate("/containers/create")}>
-                        <PlusIcon /> Create Container
+                        <PlusIcon /> Add Container
                     </Button>
                 }
             />
