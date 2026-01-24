@@ -1,8 +1,11 @@
-import { usePaginatedApi } from "../hooks/usePaginatedApi";
-import { containersApi } from "../api";
+import { usePaginatedApi } from "@/hooks/usePaginatedApi";
+import { containersApi } from "@/api";
 import Paginator from "@/components/Paginator";
-import PageHeader from "../components/PageHeader";
+import PageHeader from "@/components/PageHeader";
 import ContainersTable from "@/features/containers/ContainersTable";
+import { Button } from "@/components/ui/button";
+import { PlusIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Containers() {
     const { 
@@ -14,6 +17,8 @@ export default function Containers() {
         totalPages, 
         hasMultiplePages 
       } = usePaginatedApi(containersApi.list);
+
+    const navigate = useNavigate();
 
     if (loading) {
         return <div>Loading...</div>;
@@ -29,7 +34,14 @@ export default function Containers() {
 
     return (
         <div className="flex flex-col h-full">
-            <PageHeader title="Containers" />
+            <PageHeader
+                title="Containers"
+                action={
+                    <Button size="sm" onClick={() => navigate("/containers/create")}>
+                        <PlusIcon /> Create Container
+                    </Button>
+                }
+            />
             <div className="flex-1 min-h-0 mt-6 overflow-auto">
                 <ContainersTable data={data} />
             </div>

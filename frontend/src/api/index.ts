@@ -86,7 +86,7 @@ export const containersApi = {
         const { data } = await api.get<ContainerDetail>(`/containers/${id}`);
         return data;
     },
-    create: async (data: { name?: string; room_id?: string }) => {
+    create: async (data: { name?: string; room_id?: number }) => {
         const response = await api.post<Container>('/containers/', data);
         return response.data;
     },
