@@ -42,6 +42,7 @@ export default function Items() {
     return (
         <div className="flex flex-col h-full">
             <PageHeader title="Items" action={newItemBtn()} />
+            <div>Filters</div>
             <div className="flex-1 min-h-0 mt-6 overflow-auto">
                 <ItemsTable data={data} />
             </div>

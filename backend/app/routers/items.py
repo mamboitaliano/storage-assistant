@@ -20,9 +20,28 @@ def create_item(data: ItemCreate, db: Session = Depends(get_db)):
     return item
 
 @router.get("/")
-def get_items(page: int = Query(1, ge=1),db: Session = Depends(get_db)):
-    """Get all items"""
-    return items_service.get_items_paginated(db, page=page)
+def get_items(
+        page: int = Query(1, ge=1),
+        name: str | None = Query(None),
+        rooms: str | None = Query(None),
+        containers: str | None = Query(None),
+        db: Session = Depends(get_db)
+    ):
+    """Get all items with optional filters"""
+    room_ids = [int(r) for r in rooms.split(",")] if rooms else None
+    container_ids = [int(c) for c in containers.split(",")] if containers else None
+    
+    result, error = items_service.get_items_paginated(
+        db, page=page, name=name, rooms=room_ids, containers=container_ids
+    )
+    
+    if error == "container_room_mismatch":
+        raise HTTPException(
+            status_code=400,
+            detail="One or more containers do not belong to the specified rooms"
+        )
+    
+    return result
 
 @router.put("/{item_id}")
 def update_item(item_id: int, data: ItemUpdate, db: Session = Depends(get_db)):
