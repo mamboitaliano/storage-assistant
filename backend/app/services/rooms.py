@@ -170,3 +170,13 @@ def list_items_in_room(
 
 def get_room(db: Session, room_id: int) -> Room | None:
     return db.query(Room).filter(Room.id == room_id).first()
+
+
+def search_rooms(db: Session, query: str) -> list[Room]:
+    """Search rooms by name (case-insensitive)"""
+    return (
+        db.query(Room)
+        .filter(Room.name.ilike(f"%{query}%"))
+        .limit(50)
+        .all()
+    )

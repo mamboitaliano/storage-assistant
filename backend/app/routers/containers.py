@@ -7,12 +7,24 @@ from ..schemas.containers import (
     ContainerResponse,
     ContainerDetailResponse,
     ContainerItemCreate,
+    ContainerOption,
     PaginatedContainerResponse,
 )
 from ..schemas.items import ItemResponse
 from ..services import containers as containers_service
 
 router = APIRouter()
+
+@router.get("/search", response_model=list[ContainerOption])
+def search_containers(
+    q: str = Query(..., min_length=1),
+    rooms: str | None = Query(None),
+    db: Session = Depends(get_db)
+):
+    """Search containers by name, optionally filtered by rooms"""
+    room_ids = [int(r) for r in rooms.split(",")] if rooms else None
+    containers = containers_service.search_containers(db, q, room_ids)
+    return [ContainerOption.model_validate(c) for c in containers]
 
 @router.post("/", response_model=ContainerResponse)
 def create_container(data: ContainerCreate, db: Session = Depends(get_db)): # create a new container

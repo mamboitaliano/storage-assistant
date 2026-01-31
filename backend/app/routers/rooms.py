@@ -2,12 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemCreate, PaginatedRoomResponse
+from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemCreate, PaginatedRoomResponse, RoomOption
 from ..schemas.containers import ContainerOption
 from ..schemas.items import ItemResponse, PaginatedItemResponse
 from ..services import rooms as rooms_service
 
 router = APIRouter()
+
+@router.get("/search", response_model=list[RoomOption])
+def search_rooms(q: str = Query(..., min_length=1), db: Session = Depends(get_db)):
+    """Search rooms by name"""
+    rooms = rooms_service.search_rooms(db, q)
+    return [RoomOption.model_validate(r) for r in rooms]
 
 @router.post("/", response_model=RoomResponse)
 def create_room(data: RoomCreate, db: Session = Depends(get_db)):

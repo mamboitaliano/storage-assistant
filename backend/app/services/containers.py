@@ -140,6 +140,16 @@ def delete_container(db: Session, container_id: int) -> dict | None:
     db.commit()
     return {"message": "Container deleted", "id": container.id}
 
+def search_containers(db: Session, query: str, room_ids: list[int] | None = None) -> list[Container]:
+    """Search containers by name (case-insensitive), optionally filtered by rooms"""
+    q = db.query(Container).filter(Container.name.ilike(f"%{query}%"))
+    
+    if room_ids:
+        q = q.filter(Container.room_id.in_(room_ids))
+    
+    return q.limit(50).all()
+
+
 def create_item_in_container(db: Session, container_id: int, data: ContainerItemCreate) -> ItemResponse | None:
     """Create a new item in a container"""
     container = db.query(Container).filter(Container.id == container_id).first()
