@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemCreate, PaginatedRoomResponse, RoomOption
+from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemCreate, PaginatedRoomResponse, RoomOption, RoomOptionsResponse
 from ..schemas.containers import ContainerOption
 from ..schemas.items import ItemResponse, PaginatedItemResponse
 from ..services import rooms as rooms_service
@@ -24,6 +24,16 @@ def create_room(data: RoomCreate, db: Session = Depends(get_db)):
 def list_rooms(page: int = Query(1, ge=1), db: Session = Depends(get_db)):
     """List all rooms paginated"""
     return rooms_service.get_rooms_paginated(db, page=page)
+
+@router.get("/all", response_model=RoomOptionsResponse)
+def list_all_rooms(limit: int = Query(200, ge=1, le=500), db: Session = Depends(get_db)):
+    """List all rooms up to a limit (for dropdowns)"""
+    rooms, total, has_more = rooms_service.list_all_rooms(db, limit=limit)
+    return RoomOptionsResponse(
+        data=[RoomOption.model_validate(r) for r in rooms],
+        total=total,
+        hasMore=has_more,
+    )
 
 @router.get("/{room_id}", response_model=RoomResponse)
 def get_room(room_id: int, db: Session = Depends(get_db)):

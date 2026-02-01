@@ -79,12 +79,13 @@ def test_get_containers_for_room_returns_container_options(db_session, floor):
     result = rooms_service.get_containers_for_room(db_session, rooms[0].id)
     
     assert len(result) == 3
-    # Verify it returns ContainerOption (only id and name)
+    # Verify it returns ContainerOption (id, name, room_id)
     for container_option in result:
         assert hasattr(container_option, 'id')
         assert hasattr(container_option, 'name')
-        # Should NOT have full container fields
-        assert not hasattr(container_option, 'room_id') or container_option.room_id is None
+        assert hasattr(container_option, 'room_id')
+        assert container_option.room_id == rooms[0].id
+        # Should NOT have full container fields like item_count
         assert not hasattr(container_option, 'item_count')
 
 

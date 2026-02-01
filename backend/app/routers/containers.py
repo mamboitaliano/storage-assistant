@@ -8,6 +8,7 @@ from ..schemas.containers import (
     ContainerDetailResponse,
     ContainerItemCreate,
     ContainerOption,
+    ContainerOptionsResponse,
     PaginatedContainerResponse,
 )
 from ..schemas.items import ItemResponse
@@ -35,6 +36,21 @@ def create_container(data: ContainerCreate, db: Session = Depends(get_db)): # cr
 def list_containers(page: int = Query(1, ge=1),db: Session = Depends(get_db)):
     """List all containers"""
     return containers_service.list_containers_paginated(db, page=page)
+
+@router.get("/all", response_model=ContainerOptionsResponse)
+def list_all_containers(
+    limit: int = Query(200, ge=1, le=500),
+    rooms: str | None = Query(None),
+    db: Session = Depends(get_db)
+):
+    """List all containers up to a limit (for dropdowns), optionally filtered by rooms"""
+    room_ids = [int(r) for r in rooms.split(",")] if rooms else None
+    containers, total, has_more = containers_service.list_all_containers(db, limit=limit, room_ids=room_ids)
+    return ContainerOptionsResponse(
+        data=[ContainerOption.model_validate(c) for c in containers],
+        total=total,
+        hasMore=has_more,
+    )
 
 @router.get("/{container_id}", response_model=ContainerDetailResponse)
 def get_container(container_id: int, db: Session = Depends(get_db)):

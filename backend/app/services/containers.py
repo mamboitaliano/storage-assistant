@@ -185,3 +185,25 @@ def create_item_in_container(db: Session, container_id: int, data: ContainerItem
     db.refresh(item)
 
     return ItemResponse.model_validate(item)
+
+
+def list_all_containers(
+    db: Session, 
+    limit: int = 200, 
+    room_ids: list[int] | None = None
+) -> tuple[list[Container], int, bool]:
+    """
+    List all containers up to a limit, optionally filtered by rooms.
+    
+    Returns:
+        tuple: (containers, total_count, has_more)
+    """
+    query = db.query(Container)
+    
+    if room_ids:
+        query = query.filter(Container.room_id.in_(room_ids))
+    
+    total = query.count()
+    containers = query.limit(limit).all()
+    has_more = total > limit
+    return containers, total, has_more

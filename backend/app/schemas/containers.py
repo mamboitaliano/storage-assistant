@@ -26,6 +26,15 @@ class ContainerOption(BaseModel):
     """Lightweight container for dropdowns"""
     id: int
     name: str | None = None
+    room_id: int | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ContainerOptionsResponse(BaseModel):
+    """Response for listing all containers (with limit)"""
+    data: list[ContainerOption]
+    total: int
+    hasMore: bool
 
     model_config = ConfigDict(from_attributes=True)
 

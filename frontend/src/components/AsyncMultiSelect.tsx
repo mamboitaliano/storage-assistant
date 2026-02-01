@@ -47,6 +47,24 @@ export default function AsyncMultiSelect({
     
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    // Sync selectedOptions when value prop changes externally
+    // This handles cases like clearing containers when rooms change
+    useEffect(() => {
+        setSelectedOptions(prev => {
+            // If value is empty, clear all selected options
+            if (value.length === 0) {
+                return [];
+            }
+            // Filter out any selected options that are no longer in value
+            const filtered = prev.filter(opt => value.includes(opt.id));
+            // If lengths match, no external change occurred
+            if (filtered.length === value.length) {
+                return filtered;
+            }
+            return filtered;
+        });
+    }, [value]);
+
     // Fetch options when query changes (debounced)
     useEffect(() => {
         if (debounceTimerRef.current) {
@@ -154,9 +172,9 @@ export default function AsyncMultiSelect({
                             )}
                             {!loading && options.length > 0 && (
                                 <CommandGroup>
-                                    {options.map((option) => (
+                                    {options.map((option, index) => (
                                         <CommandItem
-                                            key={option.id}
+                                            key={`option-${option.id}-${index}`}
                                             value={String(option.id)}
                                             onSelect={() => handleSelect(option)}
                                         >
@@ -179,9 +197,9 @@ export default function AsyncMultiSelect({
             {/* Selected items as badges */}
             {selectedOptions.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1">
-                    {selectedOptions.map((option) => (
+                    {selectedOptions.map((option, index) => (
                         <Badge 
-                            key={option.id} 
+                            key={`badge-${option.id}-${index}`} 
                             variant="secondary"
                             className="gap-1 pr-1"
                         >

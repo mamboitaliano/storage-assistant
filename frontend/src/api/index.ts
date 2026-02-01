@@ -33,6 +33,13 @@ export interface Container {
 export interface ContainerOption {
     id: number;
     name: string | null;
+    room_id: number | null;
+}
+
+export interface OptionsResponse<T> {
+    data: T[];
+    total: number;
+    hasMore: boolean;
 }
 
 export interface ContainerDetail extends Container {
@@ -82,6 +89,14 @@ export const containersApi = {
         const { data } = await api.get<PaginatedResponse<Container>>(`/containers/?page=${page}`);
         return data;
     },
+    listAll: async (limit: number = 200, roomIds?: number[]) => {
+        const params = new URLSearchParams({ limit: String(limit) });
+        if (roomIds && roomIds.length > 0) {
+            params.append('rooms', roomIds.join(','));
+        }
+        const { data } = await api.get<OptionsResponse<ContainerOption>>(`/containers/all?${params}`);
+        return data;
+    },
     search: async (query: string, roomIds?: number[]) => {
         const params = new URLSearchParams({ q: query });
         if (roomIds && roomIds.length > 0) {
@@ -111,6 +126,10 @@ export const containersApi = {
 export const roomsApi = {
     list: async (page: number = 1) => {
         const { data } = await api.get<PaginatedResponse<Room>>(`/rooms/?page=${page}`);
+        return data;
+    },
+    listAll: async (limit: number = 200) => {
+        const { data } = await api.get<OptionsResponse<RoomOption>>(`/rooms/all?limit=${limit}`);
         return data;
     },
     search: async (query: string) => {

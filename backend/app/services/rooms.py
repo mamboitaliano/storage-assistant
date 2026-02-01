@@ -180,3 +180,16 @@ def search_rooms(db: Session, query: str) -> list[Room]:
         .limit(50)
         .all()
     )
+
+
+def list_all_rooms(db: Session, limit: int = 200) -> tuple[list[Room], int, bool]:
+    """
+    List all rooms up to a limit.
+    
+    Returns:
+        tuple: (rooms, total_count, has_more)
+    """
+    total = db.query(Room).count()
+    rooms = db.query(Room).limit(limit).all()
+    has_more = total > limit
+    return rooms, total, has_more
