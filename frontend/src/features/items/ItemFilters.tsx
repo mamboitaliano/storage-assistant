@@ -175,7 +175,7 @@ export default function ItemFilters({
     );
 
     return (
-        <div className="flex items-end gap-4 py-4 flex-wrap">
+        <div className="flex items-start gap-4 py-4 flex-wrap">
             {/* Name filter */}
             <div className="flex flex-col gap-1.5">
                 <Label htmlFor="name-filter" className="text-sm text-muted-foreground">
@@ -290,23 +290,26 @@ export default function ItemFilters({
                 />
             </div>
 
-            {/* Apply/Clear buttons */}
-            <div className="flex gap-2">
-                <Button 
-                    onClick={onApply} 
-                    disabled={!filtersHaveChanged}
-                    size="sm"
-                >
-                    Apply
-                </Button>
-                <Button 
-                    onClick={onClear} 
-                    variant="outline" 
-                    disabled={!hasAppliedFilters && !hasPendingFilters}
-                    size="sm"
-                >
-                    Clear
-                </Button>
+            {/* Apply/Clear buttons - ml-auto keeps them right-aligned */}
+            <div className="flex flex-col gap-1.5 ml-auto">
+                <div className="text-sm invisible">spacer</div>
+                <div className="flex gap-2">
+                    <Button 
+                        onClick={onApply} 
+                        disabled={!filtersHaveChanged}
+                        size="sm"
+                    >
+                        Apply
+                    </Button>
+                    <Button 
+                        onClick={onClear} 
+                        variant="outline" 
+                        disabled={!hasAppliedFilters && !hasPendingFilters}
+                        size="sm"
+                    >
+                        Clear
+                    </Button>
+                </div>
             </div>
         </div>
     );
