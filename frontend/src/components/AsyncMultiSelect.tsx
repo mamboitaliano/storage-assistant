@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Check, ChevronsUpDown, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
     Command,
     CommandEmpty,
@@ -12,6 +11,12 @@ import {
     CommandList,
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 export interface SelectOption {
     id: number;
@@ -40,6 +45,7 @@ export default function AsyncMultiSelect({
     disabled = false,
 }: AsyncMultiSelectProps) {
     const [open, setOpen] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [options, setOptions] = useState<SelectOption[]>([]);
     const [loading, setLoading] = useState(false);
@@ -194,36 +200,78 @@ export default function AsyncMultiSelect({
                 </PopoverContent>
             </Popover>
 
-            {/* Selected items as badges */}
+            {/* Compact selection indicator */}
             {selectedOptions.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-1">
-                    {selectedOptions.map((option, index) => (
-                        <Badge 
-                            key={`badge-${option.id}-${index}`} 
-                            variant="secondary"
-                            className="gap-1 pr-1"
-                        >
-                            {option.name || `(unnamed)`}
-                            <button
-                                type="button"
-                                onClick={() => handleRemove(option.id)}
-                                className="ml-1 rounded-full hover:bg-muted p-0.5"
-                            >
-                                <X className="h-3 w-3" />
-                            </button>
-                        </Badge>
-                    ))}
-                    {selectedOptions.length > 1 && (
-                        <button
-                            type="button"
-                            onClick={handleClearAll}
-                            className="text-xs text-muted-foreground hover:text-foreground"
-                        >
-                            Clear all
-                        </button>
-                    )}
+                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                    <span>{selectedOptions.length} selected</span>
+                    <span>·</span>
+                    <button
+                        type="button"
+                        onClick={() => setDialogOpen(true)}
+                        className="hover:text-foreground underline"
+                    >
+                        Show selection
+                    </button>
+                    <span>·</span>
+                    <button
+                        type="button"
+                        onClick={handleClearAll}
+                        className="hover:text-foreground underline"
+                    >
+                        Clear all
+                    </button>
                 </div>
             )}
+
+            {/* Selection dialog */}
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Selected Items ({selectedOptions.length})</DialogTitle>
+                    </DialogHeader>
+                    <div className="max-h-64 overflow-y-auto">
+                        {selectedOptions.length === 0 ? (
+                            <p className="text-sm text-muted-foreground py-4 text-center">
+                                No items selected
+                            </p>
+                        ) : (
+                            <ul className="divide-y">
+                                {selectedOptions.map((option, index) => (
+                                    <li 
+                                        key={`dialog-item-${option.id}-${index}`}
+                                        className="flex items-center justify-between py-2 px-1"
+                                    >
+                                        <span className="text-sm">
+                                            {option.name || "(unnamed)"}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemove(option.id)}
+                                            className="text-muted-foreground hover:text-destructive p-1 rounded"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                    {selectedOptions.length > 0 && (
+                        <div className="flex justify-end pt-2 border-t">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    handleClearAll();
+                                    setDialogOpen(false);
+                                }}
+                                className="text-sm text-muted-foreground hover:text-foreground underline"
+                            >
+                                Clear all
+                            </button>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
