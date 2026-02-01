@@ -170,3 +170,26 @@ def list_items_in_room(
 
 def get_room(db: Session, room_id: int) -> Room | None:
     return db.query(Room).filter(Room.id == room_id).first()
+
+
+def search_rooms(db: Session, query: str) -> list[Room]:
+    """Search rooms by name (case-insensitive)"""
+    return (
+        db.query(Room)
+        .filter(Room.name.ilike(f"%{query}%"))
+        .limit(50)
+        .all()
+    )
+
+
+def list_all_rooms(db: Session, limit: int = 200) -> tuple[list[Room], int, bool]:
+    """
+    List all rooms up to a limit.
+    
+    Returns:
+        tuple: (rooms, total_count, has_more)
+    """
+    total = db.query(Room).count()
+    rooms = db.query(Room).limit(limit).all()
+    has_more = total > limit
+    return rooms, total, has_more

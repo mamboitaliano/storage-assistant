@@ -32,6 +32,14 @@ class RoomOption(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class RoomOptionsResponse(BaseModel):
+    """Response for listing all rooms (with limit)"""
+    data: list[RoomOption]
+    total: int
+    hasMore: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
 class RoomItemCreate(ItemCreateBase):
     """Schema for creating items within a room context (room_id from URL)."""
 

@@ -33,6 +33,13 @@ export interface Container {
 export interface ContainerOption {
     id: number;
     name: string | null;
+    room_id: number | null;
+}
+
+export interface OptionsResponse<T> {
+    data: T[];
+    total: number;
+    hasMore: boolean;
 }
 
 export interface ContainerDetail extends Container {
@@ -82,6 +89,22 @@ export const containersApi = {
         const { data } = await api.get<PaginatedResponse<Container>>(`/containers/?page=${page}`);
         return data;
     },
+    listAll: async (limit: number = 200, roomIds?: number[]) => {
+        const params = new URLSearchParams({ limit: String(limit) });
+        if (roomIds && roomIds.length > 0) {
+            params.append('rooms', roomIds.join(','));
+        }
+        const { data } = await api.get<OptionsResponse<ContainerOption>>(`/containers/all?${params}`);
+        return data;
+    },
+    search: async (query: string, roomIds?: number[]) => {
+        const params = new URLSearchParams({ q: query });
+        if (roomIds && roomIds.length > 0) {
+            params.append('rooms', roomIds.join(','));
+        }
+        const { data } = await api.get<ContainerOption[]>(`/containers/search?${params}`);
+        return data;
+    },
     get: async (id: number) => {
         const { data } = await api.get<ContainerDetail>(`/containers/${id}`);
         return data;
@@ -103,6 +126,14 @@ export const containersApi = {
 export const roomsApi = {
     list: async (page: number = 1) => {
         const { data } = await api.get<PaginatedResponse<Room>>(`/rooms/?page=${page}`);
+        return data;
+    },
+    listAll: async (limit: number = 200) => {
+        const { data } = await api.get<OptionsResponse<RoomOption>>(`/rooms/all?limit=${limit}`);
+        return data;
+    },
+    search: async (query: string) => {
+        const { data } = await api.get<RoomOption[]>(`/rooms/search?q=${encodeURIComponent(query)}`);
         return data;
     },
     listContainers: async (roomId: number) => {
@@ -150,9 +181,27 @@ export const floorsApi = {
     },
 };
 
+export interface ItemFilters {
+    name?: string;
+    rooms?: number[];
+    containers?: number[];
+}
+
 export const itemsApi = {
-    list: async (page: number = 1) => {
-        const { data } = await api.get<PaginatedResponse<Item>>(`/items/?page=${page}`);
+    list: async (page: number = 1, filters?: ItemFilters) => {
+        const params = new URLSearchParams({ page: String(page) });
+        
+        if (filters?.name) {
+            params.append('name', filters.name);
+        }
+        if (filters?.rooms && filters.rooms.length > 0) {
+            params.append('rooms', filters.rooms.join(','));
+        }
+        if (filters?.containers && filters.containers.length > 0) {
+            params.append('containers', filters.containers.join(','));
+        }
+        
+        const { data } = await api.get<PaginatedResponse<Item>>(`/items/?${params}`);
         return data;
     },
     create: async (data: { name: string, room_id: number, container_id?: number | null }) => {

@@ -47,24 +47,60 @@ def create_item(db: Session, data: ItemCreate) -> tuple[ItemResponse | None, str
     
     return ItemResponse.model_validate(item), None
 
-def get_items_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE) -> PaginatedItemResponse:
-    """Get paginated items"""
-    total = db.query(Item).count()
+def get_items_paginated(
+        db: Session,
+        page: int = 1,
+        page_size: int = PAGE_SIZE,
+        name: str | None = None,
+        rooms: list[int] | None = None,
+        containers: list[int] | None = None
+    ) -> tuple[PaginatedItemResponse | None, str | None]:
+    """
+    Get paginated items with optional filters.
+    
+    Returns:
+        tuple: (PaginatedItemResponse, None) on success
+               (None, "container_room_mismatch") if containers don't belong to specified rooms
+    """
+    # If both rooms and containers are provided, validate containers belong to those rooms
+    if rooms and containers:
+        valid_containers = (
+            db.query(Container.id)
+            .filter(Container.id.in_(containers), Container.room_id.in_(rooms))
+            .all()
+        )
+        valid_container_ids = {c.id for c in valid_containers}
+        invalid_containers = set(containers) - valid_container_ids
+        if invalid_containers:
+            return None, "container_room_mismatch"
+    
+    # Build base query
+    query = db.query(Item).options(joinedload(Item.room), joinedload(Item.container))
+    
+    # Apply filters conditionally
+    if name:
+        query = query.filter(Item.name.ilike(f"%{name}%"))
+    
+    if containers:
+        # Container filter takes precedence (more specific)
+        query = query.filter(Item.container_id.in_(containers))
+    elif rooms:
+        # Only apply room filter if no container filter
+        query = query.filter(Item.room_id.in_(rooms))
+    
+    # Get total count AFTER filters are applied
+    total = query.count()
+    
+    # Apply pagination
     offset = (page - 1) * page_size
-    items = (
-        db.query(Item)
-        .options(joinedload(Item.room), joinedload(Item.container))
-        .offset(offset)
-        .limit(page_size)
-        .all()
-    )
+    items = query.offset(offset).limit(page_size).all()
     
     return PaginatedItemResponse(
         total=total,
         page=page,
         pageSize=page_size,
         data=items,
-    )
+    ), None
 
 def get_items(db: Session) -> list[Item]:
     items = db.query(Item).all()

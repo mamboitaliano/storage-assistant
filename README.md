@@ -16,6 +16,7 @@ Floors → Rooms → Containers → Items
 - **Inventory Tracking** – Add items to rooms or containers and track quantities
 - **QR Code Labels** – Generate QR codes for containers that link directly to their contents page
 - **Hierarchical Organization** – Organize storage by floor, room, and container
+- **Filtering** – Filter items by name, room, and container with paginated results
 - **Quick Search** – Find items across your entire home (coming soon)
 - **Mobile-Friendly** – Scan QR codes with your phone to instantly see what's in a box
 
@@ -154,10 +155,11 @@ storage-assistant/
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/           # Route page components
-│   │   ├── features/        # Feature-specific components (tables, etc.)
+│   │   ├── features/        # Feature-specific components (filters, tables, etc.)
 │   │   ├── components/      # Shared components
 │   │   │   └── ui/          # shadcn/ui primitives
 │   │   ├── hooks/           # Custom React hooks
+│   │   ├── utils/           # Utility functions
 │   │   └── api/             # API client and types
 │   └── package.json
 ├── docker-compose.dev.yml   # Development Docker config
@@ -180,6 +182,7 @@ storage-assistant/
 - [x] Floor/Room/Container/Item CRUD
 - [x] Pagination for list views
 - [x] QR code generation for containers
+- [x] Item filtering by name, room, and container
 - [ ] Global search across all entities
 - [ ] Item quantity tracking and history
 - [ ] Barcode scanning for items

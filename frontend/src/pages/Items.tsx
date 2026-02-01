@@ -1,14 +1,18 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePaginatedApi } from "../hooks/usePaginatedApi";
-import { itemsApi } from "../api";
+import { itemsApi, type Item, type ItemFilters as ItemFiltersType } from "../api";
 import Paginator from "@/components/Paginator";
 import PageHeader from "@/components/PageHeader";
 import ItemsTable from "@/features/items/ItemsTable";
+import ItemFilters from "@/features/items/ItemFilters";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
 
 export default function Items() {
     const navigate = useNavigate();
+    const [pendingFilters, setPendingFilters] = useState<ItemFiltersType>({});
+    
     const { 
         data, 
         loading, 
@@ -16,20 +20,20 @@ export default function Items() {
         page, 
         setPage, 
         totalPages, 
-        hasMultiplePages 
-      } = usePaginatedApi(itemsApi.list);
+        hasMultiplePages,
+        appliedFilters,
+        applyFilters,
+        clearFilters,
+    } = usePaginatedApi<Item, ItemFiltersType>(itemsApi.list);
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-    
-    if (error) {
-        return <div>Error: {error.message}</div>;
-    }
+    const handleApplyFilters = () => {
+        applyFilters(pendingFilters);
+    };
 
-    if (!data) {
-        return <div>No data</div>;
-    }
+    const handleClearFilters = () => {
+        setPendingFilters({});
+        clearFilters();
+    };
 
     const newItemBtn = () => {
         return (
@@ -42,14 +46,29 @@ export default function Items() {
     return (
         <div className="flex flex-col h-full">
             <PageHeader title="Items" action={newItemBtn()} />
-            <div className="flex-1 min-h-0 mt-6 overflow-auto">
-                <ItemsTable data={data} />
-            </div>
-            {hasMultiplePages && (
-                <div className="flex-shrink-0 py-4">
-                    <Paginator page={page} totalPages={totalPages} onPageChange={setPage} />
-                </div>
+            <ItemFilters 
+                filters={pendingFilters}
+                appliedFilters={appliedFilters}
+                onFiltersChange={setPendingFilters}
+                onApply={handleApplyFilters}
+                onClear={handleClearFilters}
+            />
+            {loading ? (
+                <div className="flex-1 flex items-center justify-center">Loading...</div>
+            ) : error ? (
+                <div className="flex-1 flex items-center justify-center text-red-500">Error: {error.message}</div>
+            ) : (
+                <>
+                    <div className="flex-1 min-h-0 overflow-auto">
+                        <ItemsTable data={data} />
+                    </div>
+                    {hasMultiplePages && (
+                        <div className="flex-shrink-0 py-4">
+                            <Paginator page={page} totalPages={totalPages} onPageChange={setPage} />
+                        </div>
+                    )}
+                </>
             )}
         </div>
     )
-};
+}

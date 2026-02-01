@@ -121,3 +121,113 @@ def test_get_items_paginated_api_empty_page(client, db_session, room):
 def test_get_items_paginated_api_no_items(client):
     resp = client.get("/items/?page=1")
     assert_pagination_api_response(resp, 200, 0, 1, 0)
+
+
+# Filter API tests ----------------------------------------------------------------
+
+def test_filter_items_api_by_name(client, db_session, room):
+    """GET /items?name=X returns items matching name"""
+    from app.models import Item
+    db_session.add_all([
+        Item(name="Screwdriver", room_id=room.id, quantity=1),
+        Item(name="Hammer", room_id=room.id, quantity=1),
+        Item(name="Phillips Screwdriver", room_id=room.id, quantity=1),
+    ])
+    db_session.commit()
+    
+    resp = client.get("/items/?name=screwdriver")
+    
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 2
+    names = [item["name"] for item in data["data"]]
+    assert "Screwdriver" in names
+    assert "Phillips Screwdriver" in names
+
+
+def test_filter_items_api_by_rooms(client, db_session, floor):
+    """GET /items?rooms=1,2 returns items in specified rooms"""
+    from app.models import Room, Item
+    room1 = Room(name="Kitchen", floor_id=floor.id)
+    room2 = Room(name="Garage", floor_id=floor.id)
+    room3 = Room(name="Bedroom", floor_id=floor.id)
+    db_session.add_all([room1, room2, room3])
+    db_session.commit()
+    
+    db_session.add_all([
+        Item(name="Spatula", room_id=room1.id, quantity=1),
+        Item(name="Wrench", room_id=room2.id, quantity=1),
+        Item(name="Pillow", room_id=room3.id, quantity=1),
+    ])
+    db_session.commit()
+    
+    resp = client.get(f"/items/?rooms={room1.id},{room2.id}")
+    
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 2
+    names = [item["name"] for item in data["data"]]
+    assert "Spatula" in names
+    assert "Wrench" in names
+
+
+def test_filter_items_api_by_containers(client, db_session, room):
+    """GET /items?containers=1 returns items in specified containers"""
+    from app.models import Container, Item
+    container1 = Container(name="Toolbox", room_id=room.id)
+    container2 = Container(name="Drawer", room_id=room.id)
+    db_session.add_all([container1, container2])
+    db_session.commit()
+    
+    db_session.add_all([
+        Item(name="Hammer", room_id=room.id, container_id=container1.id, quantity=1),
+        Item(name="Scissors", room_id=room.id, container_id=container2.id, quantity=1),
+    ])
+    db_session.commit()
+    
+    resp = client.get(f"/items/?containers={container1.id}")
+    
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["data"][0]["name"] == "Hammer"
+
+
+def test_filter_items_api_by_name_and_rooms(client, db_session, floor):
+    """GET /items?name=X&rooms=1 returns matching items in specified rooms"""
+    from app.models import Room, Item
+    room1 = Room(name="Kitchen", floor_id=floor.id)
+    room2 = Room(name="Garage", floor_id=floor.id)
+    db_session.add_all([room1, room2])
+    db_session.commit()
+    
+    db_session.add_all([
+        Item(name="Red Screwdriver", room_id=room1.id, quantity=1),
+        Item(name="Blue Screwdriver", room_id=room2.id, quantity=1),
+    ])
+    db_session.commit()
+    
+    resp = client.get(f"/items/?name=screwdriver&rooms={room1.id}")
+    
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["data"][0]["name"] == "Red Screwdriver"
+
+
+def test_filter_items_api_container_room_mismatch_returns_400(client, db_session, floor):
+    """GET /items?rooms=1&containers=2 returns 400 when container not in room"""
+    from app.models import Room, Container
+    room1 = Room(name="Kitchen", floor_id=floor.id)
+    room2 = Room(name="Garage", floor_id=floor.id)
+    db_session.add_all([room1, room2])
+    db_session.commit()
+    
+    container_in_room2 = Container(name="Toolbox", room_id=room2.id)
+    db_session.add(container_in_room2)
+    db_session.commit()
+    
+    resp = client.get(f"/items/?rooms={room1.id}&containers={container_in_room2.id}")
+    
+    assert resp.status_code == 400
+    assert resp.json()["detail"] == "One or more containers do not belong to the specified rooms"

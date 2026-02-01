@@ -79,12 +79,13 @@ def test_get_containers_for_room_returns_container_options(db_session, floor):
     result = rooms_service.get_containers_for_room(db_session, rooms[0].id)
     
     assert len(result) == 3
-    # Verify it returns ContainerOption (only id and name)
+    # Verify it returns ContainerOption (id, name, room_id)
     for container_option in result:
         assert hasattr(container_option, 'id')
         assert hasattr(container_option, 'name')
-        # Should NOT have full container fields
-        assert not hasattr(container_option, 'room_id') or container_option.room_id is None
+        assert hasattr(container_option, 'room_id')
+        assert container_option.room_id == rooms[0].id
+        # Should NOT have full container fields like item_count
         assert not hasattr(container_option, 'item_count')
 
 
@@ -106,3 +107,36 @@ def test_get_containers_for_room_only_returns_containers_for_specified_room(db_s
     result = rooms_service.get_containers_for_room(db_session, rooms[0].id)
     
     assert len(result) == 3
+
+
+# List all rooms tests (for "Show all" dropdown) ----------------------------------
+
+def test_list_all_rooms_returns_all_within_limit(db_session, floor):
+    """list_all_rooms returns all rooms when count is within limit"""
+    create_rooms(db_session, floor.id, 50)
+    
+    rooms, total, has_more = rooms_service.list_all_rooms(db_session, limit=200)
+    
+    assert len(rooms) == 50
+    assert total == 50
+    assert has_more is False
+
+
+def test_list_all_rooms_returns_has_more_when_exceeds_limit(db_session, floor):
+    """list_all_rooms returns has_more=True when total exceeds limit"""
+    create_rooms(db_session, floor.id, 25)
+    
+    rooms, total, has_more = rooms_service.list_all_rooms(db_session, limit=10)
+    
+    assert len(rooms) == 10
+    assert total == 25
+    assert has_more is True
+
+
+def test_list_all_rooms_empty(db_session):
+    """list_all_rooms returns empty list when no rooms exist"""
+    rooms, total, has_more = rooms_service.list_all_rooms(db_session, limit=200)
+    
+    assert len(rooms) == 0
+    assert total == 0
+    assert has_more is False
