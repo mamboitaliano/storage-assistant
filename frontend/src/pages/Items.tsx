@@ -35,12 +35,6 @@ export default function Items() {
         clearFilters();
     };
 
-    const hasAppliedFilters = Boolean(
-        appliedFilters?.name || 
-        (appliedFilters?.rooms && appliedFilters.rooms.length > 0) ||
-        (appliedFilters?.containers && appliedFilters.containers.length > 0)
-    );
-
     const newItemBtn = () => {
         return (
             <Button size="sm" onClick={() => {
@@ -54,10 +48,10 @@ export default function Items() {
             <PageHeader title="Items" action={newItemBtn()} />
             <ItemFilters 
                 filters={pendingFilters}
+                appliedFilters={appliedFilters}
                 onFiltersChange={setPendingFilters}
                 onApply={handleApplyFilters}
                 onClear={handleClearFilters}
-                hasAppliedFilters={hasAppliedFilters}
             />
             {loading ? (
                 <div className="flex-1 flex items-center justify-center">Loading...</div>
