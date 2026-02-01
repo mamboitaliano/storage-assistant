@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AsyncMultiSelect, { type SelectOption } from "@/components/AsyncMultiSelect";
 import { useLoadableOptions } from "@/hooks/useLoadableOptions";
+import { filtersAreEqual } from "@/utils/filters";
 import { roomsApi, type ItemFilters as ItemFiltersType } from "@/api";
 
 interface ItemFiltersProps {
@@ -12,24 +13,6 @@ interface ItemFiltersProps {
     onFiltersChange: (filters: ItemFiltersType) => void;
     onApply: () => void;
     onClear: () => void;
-}
-
-// Helper to compare two filter objects
-function filtersAreEqual(a: ItemFiltersType | undefined, b: ItemFiltersType | undefined): boolean {
-    const aName = a?.name || '';
-    const bName = b?.name || '';
-    const aRooms = a?.rooms || [];
-    const bRooms = b?.rooms || [];
-    const aContainers = a?.containers || [];
-    const bContainers = b?.containers || [];
-    
-    if (aName !== bName) return false;
-    if (aRooms.length !== bRooms.length) return false;
-    if (aContainers.length !== bContainers.length) return false;
-    if (!aRooms.every((id, i) => bRooms[i] === id)) return false;
-    if (!aContainers.every((id, i) => bContainers[i] === id)) return false;
-    
-    return true;
 }
 
 export default function ItemFilters({ 
