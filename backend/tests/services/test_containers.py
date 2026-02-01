@@ -58,3 +58,66 @@ def test_list_containers_paginated_returns_empty_page(db_session, room):
     create_containers(db_session, room.id, 10)
     result = containers_service.list_containers_paginated(db_session, page=2, page_size=25)
     assert_pagination_service_response(result, 10, 2, 25, 0)
+
+
+# List all containers tests (for "Show all" dropdown) -----------------------------
+
+def test_list_all_containers_returns_all_within_limit(db_session, room):
+    """list_all_containers returns all containers when count is within limit"""
+    create_containers(db_session, room.id, 50)
+    
+    containers, total, has_more = containers_service.list_all_containers(db_session, limit=200)
+    
+    assert len(containers) == 50
+    assert total == 50
+    assert has_more is False
+
+
+def test_list_all_containers_returns_has_more_when_exceeds_limit(db_session, room):
+    """list_all_containers returns has_more=True when total exceeds limit"""
+    create_containers(db_session, room.id, 25)
+    
+    containers, total, has_more = containers_service.list_all_containers(db_session, limit=10)
+    
+    assert len(containers) == 10
+    assert total == 25
+    assert has_more is True
+
+
+def test_list_all_containers_filters_by_room_ids(db_session, floor):
+    """list_all_containers filters by room_ids when provided"""
+    from app.models import Room
+    
+    room1 = Room(name="Room 1", floor_id=floor.id)
+    room2 = Room(name="Room 2", floor_id=floor.id)
+    db_session.add_all([room1, room2])
+    db_session.commit()
+    
+    create_containers(db_session, room1.id, 5)
+    create_containers(db_session, room2.id, 3)
+    
+    # Filter by room1 only
+    containers, total, has_more = containers_service.list_all_containers(
+        db_session, limit=200, room_ids=[room1.id]
+    )
+    
+    assert len(containers) == 5
+    assert total == 5
+    assert has_more is False
+    
+    # Filter by both rooms
+    containers, total, has_more = containers_service.list_all_containers(
+        db_session, limit=200, room_ids=[room1.id, room2.id]
+    )
+    
+    assert len(containers) == 8
+    assert total == 8
+
+
+def test_list_all_containers_empty(db_session):
+    """list_all_containers returns empty list when no containers exist"""
+    containers, total, has_more = containers_service.list_all_containers(db_session, limit=200)
+    
+    assert len(containers) == 0
+    assert total == 0
+    assert has_more is False
