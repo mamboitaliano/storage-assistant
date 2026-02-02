@@ -187,6 +187,11 @@ export interface ItemFilters {
     containers?: number[];
 }
 
+export interface ContainerFilters {
+    name?: string;
+    rooms?: number[];
+}
+
 export const itemsApi = {
     list: async (page: number = 1, filters?: ItemFilters) => {
         const params = new URLSearchParams({ page: String(page) });
