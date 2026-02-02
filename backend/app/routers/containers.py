@@ -33,9 +33,15 @@ def create_container(data: ContainerCreate, db: Session = Depends(get_db)): # cr
     return containers_service.create_container(db, data)
 
 @router.get("/", response_model=PaginatedContainerResponse)
-def list_containers(page: int = Query(1, ge=1),db: Session = Depends(get_db)):
-    """List all containers"""
-    return containers_service.list_containers_paginated(db, page=page)
+def list_containers(
+    page: int = Query(1, ge=1),
+    name: str | None = Query(None),
+    rooms: str | None = Query(None),
+    db: Session = Depends(get_db)
+):
+    """List all containers with optional filters"""
+    room_ids = [int(r) for r in rooms.split(",")] if rooms else None
+    return containers_service.list_containers_paginated(db, page=page, name=name, rooms=room_ids)
 
 @router.get("/all", response_model=ContainerOptionsResponse)
 def list_all_containers(

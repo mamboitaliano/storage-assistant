@@ -1,13 +1,18 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { usePaginatedApi } from "@/hooks/usePaginatedApi";
-import { containersApi } from "@/api";
+import { containersApi, type Container, type ContainerFilters as ContainerFiltersType } from "@/api";
 import Paginator from "@/components/Paginator";
 import PageHeader from "@/components/PageHeader";
 import ContainersTable from "@/features/containers/ContainersTable";
+import ContainerFilters from "@/features/containers/ContainerFilters";
 import { Button } from "@/components/ui/button";
 import { PlusIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 export default function Containers() {
+    const navigate = useNavigate();
+    const [pendingFilters, setPendingFilters] = useState<ContainerFiltersType>({});
+
     const { 
         data, 
         loading, 
@@ -15,22 +20,20 @@ export default function Containers() {
         page, 
         setPage, 
         totalPages, 
-        hasMultiplePages 
-      } = usePaginatedApi(containersApi.list);
+        hasMultiplePages,
+        appliedFilters,
+        applyFilters,
+        clearFilters,
+    } = usePaginatedApi<Container, ContainerFiltersType>(containersApi.list);
 
-    const navigate = useNavigate();
+    const handleApplyFilters = () => {
+        applyFilters(pendingFilters);
+    };
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-    
-    if (error) {
-        return <div>Error: {error.message}</div>;
-    }
-
-    if (!data) {
-        return <div>No data</div>;
-    }
+    const handleClearFilters = () => {
+        setPendingFilters({});
+        clearFilters();
+    };
 
     return (
         <div className="flex flex-col h-full">
@@ -42,14 +45,29 @@ export default function Containers() {
                     </Button>
                 }
             />
-            <div className="flex-1 min-h-0 mt-6 overflow-auto">
-                <ContainersTable data={data} />
-            </div>
-            {hasMultiplePages && (
-                <div className="flex-shrink-0 py-4">
-                    <Paginator page={page} totalPages={totalPages} onPageChange={setPage} />
-                </div>
+            <ContainerFilters 
+                filters={pendingFilters}
+                appliedFilters={appliedFilters}
+                onFiltersChange={setPendingFilters}
+                onApply={handleApplyFilters}
+                onClear={handleClearFilters}
+            />
+            {loading ? (
+                <div className="flex-1 flex items-center justify-center">Loading...</div>
+            ) : error ? (
+                <div className="flex-1 flex items-center justify-center text-red-500">Error: {error.message}</div>
+            ) : (
+                <>
+                    <div className="flex-1 min-h-0 overflow-auto">
+                        <ContainersTable data={data} />
+                    </div>
+                    {hasMultiplePages && (
+                        <div className="flex-shrink-0 py-4">
+                            <Paginator page={page} totalPages={totalPages} onPageChange={setPage} />
+                        </div>
+                    )}
+                </>
             )}
         </div>
-    )
-};
+    );
+}

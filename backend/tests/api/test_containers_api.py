@@ -33,3 +33,47 @@ def test_get_container_api(client, db_session, room):
     assert payload["room_id"] == room.id
     assert payload["qr_code_path"] == "/static/qr_codes/crate.png"
     assert payload["item_count"] == 0
+
+
+# Filter API tests ----------------------------------------------------------------
+
+def test_filter_containers_api_by_name(client, db_session, room):
+    """API filters containers by name"""
+    c1 = Container(name="Toolbox", room_id=room.id)
+    c2 = Container(name="Storage Box", room_id=room.id)
+    c3 = Container(name="Drawer", room_id=room.id)
+    db_session.add_all([c1, c2, c3])
+    db_session.commit()
+    
+    resp = client.get("/containers/?name=box")
+    assert resp.status_code == 200
+    
+    payload = resp.json()
+    assert payload["total"] == 2
+    names = [c["name"] for c in payload["data"]]
+    assert "Toolbox" in names
+    assert "Storage Box" in names
+    assert "Drawer" not in names
+
+
+def test_filter_containers_api_by_rooms(client, db_session, floor):
+    """API filters containers by rooms"""
+    from app.models import Room
+    
+    room1 = Room(name="Garage", floor_id=floor.id)
+    room2 = Room(name="Attic", floor_id=floor.id)
+    db_session.add_all([room1, room2])
+    db_session.commit()
+    
+    create_containers(db_session, room1.id, 3)
+    create_containers(db_session, room2.id, 2)
+    
+    # Filter by room1
+    resp = client.get(f"/containers/?rooms={room1.id}")
+    assert resp.status_code == 200
+    assert resp.json()["total"] == 3
+    
+    # Filter by both rooms
+    resp = client.get(f"/containers/?rooms={room1.id},{room2.id}")
+    assert resp.status_code == 200
+    assert resp.json()["total"] == 5

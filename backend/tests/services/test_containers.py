@@ -60,6 +60,109 @@ def test_list_containers_paginated_returns_empty_page(db_session, room):
     assert_pagination_service_response(result, 10, 2, 25, 0)
 
 
+# Filter tests --------------------------------------------------------------------
+
+def test_filter_containers_by_name_returns_matching(db_session, room):
+    """Filtering by name returns containers with matching names (case-insensitive)"""
+    from app.models import Container
+    
+    c1 = Container(name="Toolbox", room_id=room.id)
+    c2 = Container(name="Storage Box", room_id=room.id)
+    c3 = Container(name="Kitchen Drawer", room_id=room.id)
+    db_session.add_all([c1, c2, c3])
+    db_session.commit()
+    
+    result = containers_service.list_containers_paginated(db_session, name="box")
+    
+    assert result.total == 2
+    names = [c.name for c in result.data]
+    assert "Toolbox" in names
+    assert "Storage Box" in names
+    assert "Kitchen Drawer" not in names
+
+
+def test_filter_containers_by_rooms_returns_containers_in_rooms(db_session, floor):
+    """Filtering by rooms returns only containers in those rooms"""
+    from app.models import Room
+    
+    room1 = Room(name="Garage", floor_id=floor.id)
+    room2 = Room(name="Attic", floor_id=floor.id)
+    room3 = Room(name="Basement", floor_id=floor.id)
+    db_session.add_all([room1, room2, room3])
+    db_session.commit()
+    
+    create_containers(db_session, room1.id, 3)
+    create_containers(db_session, room2.id, 2)
+    create_containers(db_session, room3.id, 4)
+    
+    # Filter by room1 only
+    result = containers_service.list_containers_paginated(db_session, rooms=[room1.id])
+    assert result.total == 3
+    
+    # Filter by room1 and room2
+    result = containers_service.list_containers_paginated(db_session, rooms=[room1.id, room2.id])
+    assert result.total == 5
+
+
+def test_filter_containers_by_name_and_rooms(db_session, floor):
+    """Filtering by both name and rooms combines the filters"""
+    from app.models import Room, Container
+    
+    room1 = Room(name="Garage", floor_id=floor.id)
+    room2 = Room(name="Kitchen", floor_id=floor.id)
+    db_session.add_all([room1, room2])
+    db_session.commit()
+    
+    c1 = Container(name="Tool Bin", room_id=room1.id)
+    c2 = Container(name="Storage Bin", room_id=room1.id)
+    c3 = Container(name="Tool Drawer", room_id=room2.id)
+    c4 = Container(name="Utensil Drawer", room_id=room2.id)
+    db_session.add_all([c1, c2, c3, c4])
+    db_session.commit()
+    
+    # Filter by "tool" in room1 only
+    result = containers_service.list_containers_paginated(db_session, name="tool", rooms=[room1.id])
+    
+    assert result.total == 1
+    assert result.data[0].name == "Tool Bin"
+
+
+def test_filter_containers_with_pagination(db_session, room):
+    """Filtering works correctly with pagination"""
+    from app.models import Container
+    
+    # Create 30 containers, 15 with "Box" in name
+    for i in range(15):
+        db_session.add(Container(name=f"Box {i}", room_id=room.id))
+    for i in range(15):
+        db_session.add(Container(name=f"Drawer {i}", room_id=room.id))
+    db_session.commit()
+    
+    # Filter by "box" with pagination
+    result = containers_service.list_containers_paginated(db_session, page=1, page_size=10, name="box")
+    
+    assert result.total == 15
+    assert len(result.data) == 10
+    assert result.page == 1
+    
+    # Second page
+    result = containers_service.list_containers_paginated(db_session, page=2, page_size=10, name="box")
+    
+    assert result.total == 15
+    assert len(result.data) == 5
+    assert result.page == 2
+
+
+def test_filter_containers_no_matches_returns_empty(db_session, room):
+    """Filtering with no matches returns empty results"""
+    create_containers(db_session, room.id, 5)
+    
+    result = containers_service.list_containers_paginated(db_session, name="nonexistent")
+    
+    assert result.total == 0
+    assert len(result.data) == 0
+
+
 # List all containers tests (for "Show all" dropdown) -----------------------------
 
 def test_list_all_containers_returns_all_within_limit(db_session, room):

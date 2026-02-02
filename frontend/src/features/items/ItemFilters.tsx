@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AsyncMultiSelect, { type SelectOption } from "@/components/AsyncMultiSelect";
+import FilterButtons from "@/components/FilterButtons";
 import { useLoadableOptions } from "@/hooks/useLoadableOptions";
+import { useRoomFilter } from "@/hooks/useRoomFilter";
 import { filtersAreEqual } from "@/utils/filters";
-import { roomsApi, containersApi, type ItemFilters as ItemFiltersType } from "@/api";
+import { containersApi, type ItemFilters as ItemFiltersType } from "@/api";
 
 interface ItemFiltersProps {
     filters: ItemFiltersType;
@@ -25,20 +26,20 @@ export default function ItemFilters({
     // Track previous rooms to detect changes
     const prevRoomsRef = useRef<number[] | undefined>(filters.rooms);
 
-    // Fetch function for loading all rooms
-    const fetchAllRooms = useCallback(async () => {
-        return await roomsApi.listAll(200);
-    }, []);
-
+    // Room filter logic from shared hook
     const {
-        options: allRooms,
-        loading: loadingAllRooms,
-        error: loadRoomsError,
-        isLoaded: roomsLoaded,
-        total: totalRooms,
-        hasMore: hasMoreRooms,
-        loadAll: handleLoadAllRooms,
-    } = useLoadableOptions(fetchAllRooms);
+        allRooms,
+        loadingAllRooms,
+        loadRoomsError,
+        roomsLoaded,
+        totalRooms,
+        hasMoreRooms,
+        handleLoadAllRooms,
+        roomSearchFn,
+        roomDebounceMs,
+        roomMinSearchLength,
+        roomPlaceholder,
+    } = useRoomFilter();
 
     // Fetch function for loading all containers (scoped to selected rooms)
     const fetchAllContainers = useCallback(async () => {
@@ -89,31 +90,6 @@ export default function ItemFilters({
         prevRoomsRef.current = currentRooms;
     }, [filters.rooms]);
 
-    // Search function for async room search
-    const searchRooms = useCallback(async (query: string): Promise<SelectOption[]> => {
-        const results = await roomsApi.search(query);
-        return results.map(r => ({ id: r.id, name: r.name }));
-    }, []);
-
-    // Local search function filters pre-loaded rooms by query
-    const searchLocalRooms = useCallback(async (query: string): Promise<SelectOption[]> => {
-        const lowerQuery = query.toLowerCase();
-        return allRooms.filter(r => 
-            r.name?.toLowerCase().includes(lowerQuery)
-        );
-    }, [allRooms]);
-
-    // Hybrid search: show pre-loaded items when empty, use API search when typing
-    const searchRoomsHybrid = useCallback(async (query: string): Promise<SelectOption[]> => {
-        if (!query.trim()) {
-            // No query - return pre-loaded items
-            return allRooms;
-        }
-        // Has query - use API to search beyond pre-loaded items
-        const results = await roomsApi.search(query);
-        return results.map(r => ({ id: r.id, name: r.name }));
-    }, [allRooms]);
-
     // Search function for async container search (scoped to selected rooms)
     const searchContainers = useCallback(async (query: string): Promise<SelectOption[]> => {
         const results = await containersApi.search(query, filters.rooms);
@@ -148,12 +124,10 @@ export default function ItemFilters({
         return results.map(c => ({ id: c.id, name: c.name }));
     }, [allContainers, filters.rooms, filterContainersByRooms]);
 
-    // Determine which search function to use:
+    // Determine which search function to use for containers:
     // - Not loaded: async search (requires typing)
     // - Loaded with no more: local search (fast filtering)
     // - Loaded with more: hybrid (show pre-loaded, search API when typing)
-    const useLocalRoomSearch = roomsLoaded && !hasMoreRooms;
-    const useHybridRoomSearch = roomsLoaded && hasMoreRooms;
     const useLocalContainerSearch = containersLoaded && !hasMoreContainers;
     const useHybridContainerSearch = containersLoaded && hasMoreContainers;
 
@@ -227,17 +201,13 @@ export default function ItemFilters({
                     )}
                 </div>
                 <AsyncMultiSelect
-                    searchFn={
-                        useLocalRoomSearch ? searchLocalRooms : 
-                        useHybridRoomSearch ? searchRoomsHybrid : 
-                        searchRooms
-                    }
+                    searchFn={roomSearchFn}
                     value={filters.rooms || []}
                     onChange={handleRoomsChange}
-                    placeholder={roomsLoaded ? "Select rooms..." : "Search rooms..."}
+                    placeholder={roomPlaceholder}
                     disabled={loadingAllRooms}
-                    debounceMs={useLocalRoomSearch ? 0 : 300}
-                    minSearchLength={roomsLoaded ? 0 : 1}
+                    debounceMs={roomDebounceMs}
+                    minSearchLength={roomMinSearchLength}
                 />
             </div>
 
@@ -290,27 +260,12 @@ export default function ItemFilters({
                 />
             </div>
 
-            {/* Apply/Clear buttons - ml-auto keeps them right-aligned */}
-            <div className="flex flex-col gap-1.5 ml-auto">
-                <div className="text-sm invisible">spacer</div>
-                <div className="flex gap-2">
-                    <Button 
-                        onClick={onApply} 
-                        disabled={!filtersHaveChanged}
-                        size="sm"
-                    >
-                        Apply
-                    </Button>
-                    <Button 
-                        onClick={onClear} 
-                        variant="outline" 
-                        disabled={!hasAppliedFilters && !hasPendingFilters}
-                        size="sm"
-                    >
-                        Clear
-                    </Button>
-                </div>
-            </div>
+            <FilterButtons
+                onApply={onApply}
+                onClear={onClear}
+                applyDisabled={!filtersHaveChanged}
+                clearDisabled={!hasAppliedFilters && !hasPendingFilters}
+            />
         </div>
     );
 }
