@@ -1,6 +1,12 @@
 from pydantic import BaseModel, ConfigDict
 from .items import ItemResponse, ItemCreateBase
 
+class ContainerRoomResponse(BaseModel):
+    id: int
+    name: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
 class ContainerCreate(BaseModel):
     name: str | None = None
     room_id: int | None = None
@@ -11,6 +17,7 @@ class ContainerResponse(BaseModel):
     room_id: int | None = None
     qr_code_path: str | None = None
     item_count: int = 0
+    room: ContainerRoomResponse | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

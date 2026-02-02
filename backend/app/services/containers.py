@@ -39,13 +39,7 @@ def create_container(db: Session, data: ContainerCreate) -> ContainerResponse:
     db.commit()
     db.refresh(container)
 
-    return ContainerResponse(
-        id=container.id,
-        name=container.name,
-        room_id=container.room_id,
-        qr_code_path=container.qr_code_path,
-        item_count=0,
-    )
+    return ContainerResponse.model_validate(container)
 
 def list_containers_paginated(
     db: Session,
@@ -55,8 +49,8 @@ def list_containers_paginated(
     rooms: list[int] | None = None,
 ) -> PaginatedContainerResponse:
     """List containers with pagination and optional filters"""
-    # Build base query
-    query = db.query(Container)
+    # Build base query with eager loading
+    query = db.query(Container).options(joinedload(Container.room))
     
     # Apply filters
     if name:
@@ -73,16 +67,7 @@ def list_containers_paginated(
     containers = query.offset(offset).limit(page_size).all()
 
     return PaginatedContainerResponse(
-        data=[
-            ContainerResponse(
-                id=c.id,
-                name=c.name,
-                room_id=c.room_id,
-                qr_code_path=c.qr_code_path,
-                item_count=len(c.items),
-            )
-            for c in containers
-        ],
+        data=[ContainerResponse.model_validate(c) for c in containers],
         total=total,
         page=page,
         pageSize=page_size,
@@ -90,32 +75,25 @@ def list_containers_paginated(
 
 def get_container_detail(db: Session, container_id: int) -> ContainerDetailResponse | None:
     """Get a container with all its details"""
-    container = db.query(Container).filter(Container.id == container_id).first()
+    container = (
+        db.query(Container)
+        .options(joinedload(Container.room))
+        .filter(Container.id == container_id)
+        .first()
+    )
     if not container:
         return None
 
-    return ContainerDetailResponse(
-        id=container.id,
-        name=container.name,
-        room_id=container.room_id,
-        qr_code_path=container.qr_code_path,
-        item_count=len(container.items),
-        items=[
-            ItemResponse(
-                id=item.id,
-                name=item.name,
-                room_id=item.room_id,
-                container_id=item.container_id,
-                quantity=item.quantity,
-                created_at=item.created_at,
-            )
-            for item in container.items
-        ],
-    )
+    return ContainerDetailResponse.model_validate(container)
 
 def update_container(db: Session, container_id: int, data: ContainerCreate) -> ContainerDetailResponse | None:
     """Update a container"""
-    container = db.query(Container).filter(Container.id == container_id).first()
+    container = (
+        db.query(Container)
+        .options(joinedload(Container.room))
+        .filter(Container.id == container_id)
+        .first()
+    )
     if not container:
         return None
 
@@ -124,24 +102,7 @@ def update_container(db: Session, container_id: int, data: ContainerCreate) -> C
     db.commit()
     db.refresh(container)
 
-    return ContainerDetailResponse(
-        id=container.id,
-        name=container.name,
-        room_id=container.room_id,
-        qr_code_path=container.qr_code_path,
-        item_count=len(container.items),
-        items=[
-            ItemResponse(
-                id=item.id,
-                name=item.name,
-                room_id=item.room_id,
-                container_id=item.container_id,
-                quantity=item.quantity,
-                created_at=item.created_at,
-            )
-            for item in container.items
-        ],
-    )
+    return ContainerDetailResponse.model_validate(container)
 
 def delete_container(db: Session, container_id: int) -> dict | None:
     """Delete a container"""

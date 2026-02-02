@@ -28,9 +28,9 @@ export const containerColumns: ColumnDef<Container>[] = [
     cell: ({ row }) => row.original.name ?? "Untitled",
   },
   {
-    accessorKey: "room_id",
+    accessorKey: "room",
     header: "Room",
-    cell: ({ row }) => row.original.room_id ?? "Untitled",
+    cell: ({ row }) => row.original.room?.name ?? "—",
   },
   {
     accessorKey: "item_count",

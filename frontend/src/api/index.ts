@@ -28,6 +28,7 @@ export interface Container {
     room_id: number | null;
     qr_code_path: string | null;
     item_count: number;
+    room: RoomOption | null;
 }
 
 export interface ContainerOption {

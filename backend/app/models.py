@@ -44,6 +44,11 @@ class Container(Base):
     items = relationship("Item", back_populates="container") # items in the container
     photos = relationship("Photo", back_populates="container") # photos in the container
 
+    @property
+    def item_count(self) -> int:
+        """Return the number of items in this container"""
+        return len(self.items)
+
 class Item(Base):
     __tablename__ = "items"
 

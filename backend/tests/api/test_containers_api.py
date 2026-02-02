@@ -77,3 +77,37 @@ def test_filter_containers_api_by_rooms(client, db_session, floor):
     resp = client.get(f"/containers/?rooms={room1.id},{room2.id}")
     assert resp.status_code == 200
     assert resp.json()["total"] == 5
+
+
+# Room inclusion API tests --------------------------------------------------------
+
+def test_get_containers_api_includes_room(client, db_session, room):
+    """API returns nested room object for each container"""
+    container = Container(name="Test Box", room_id=room.id)
+    db_session.add(container)
+    db_session.commit()
+    
+    resp = client.get("/containers/")
+    assert resp.status_code == 200
+    
+    payload = resp.json()
+    assert len(payload["data"]) == 1
+    container_data = payload["data"][0]
+    assert container_data["room"] is not None
+    assert container_data["room"]["id"] == room.id
+    assert container_data["room"]["name"] == room.name
+
+
+def test_get_container_detail_api_includes_room(client, db_session, room):
+    """API returns nested room object for container detail"""
+    container = Container(name="Test Box", room_id=room.id)
+    db_session.add(container)
+    db_session.commit()
+    
+    resp = client.get(f"/containers/{container.id}")
+    assert resp.status_code == 200
+    
+    payload = resp.json()
+    assert payload["room"] is not None
+    assert payload["room"]["id"] == room.id
+    assert payload["room"]["name"] == room.name
