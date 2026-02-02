@@ -85,8 +85,17 @@ export interface SearchResult {
 }
 
 export const containersApi = {
-    list: async (page: number = 1) => {
-        const { data } = await api.get<PaginatedResponse<Container>>(`/containers/?page=${page}`);
+    list: async (page: number = 1, filters?: ContainerFilters) => {
+        const params = new URLSearchParams({ page: String(page) });
+        
+        if (filters?.name) {
+            params.append('name', filters.name);
+        }
+        if (filters?.rooms && filters.rooms.length > 0) {
+            params.append('rooms', filters.rooms.join(','));
+        }
+        
+        const { data } = await api.get<PaginatedResponse<Container>>(`/containers/?${params}`);
         return data;
     },
     listAll: async (limit: number = 200, roomIds?: number[]) => {
