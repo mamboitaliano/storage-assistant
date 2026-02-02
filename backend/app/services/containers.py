@@ -47,11 +47,30 @@ def create_container(db: Session, data: ContainerCreate) -> ContainerResponse:
         item_count=0,
     )
 
-def list_containers_paginated(db: Session, page: int = 1, page_size: int = PAGE_SIZE) -> PaginatedContainerResponse:
-    """List containers with pagination"""
-    total = db.query(Container).count()
+def list_containers_paginated(
+    db: Session,
+    page: int = 1,
+    page_size: int = PAGE_SIZE,
+    name: str | None = None,
+    rooms: list[int] | None = None,
+) -> PaginatedContainerResponse:
+    """List containers with pagination and optional filters"""
+    # Build base query
+    query = db.query(Container)
+    
+    # Apply filters
+    if name:
+        query = query.filter(Container.name.ilike(f"%{name}%"))
+    
+    if rooms:
+        query = query.filter(Container.room_id.in_(rooms))
+    
+    # Get total count after filters
+    total = query.count()
+    
+    # Apply pagination
     offset = (page - 1) * page_size
-    containers = db.query(Container).offset(offset).limit(page_size).all()
+    containers = query.offset(offset).limit(page_size).all()
 
     return PaginatedContainerResponse(
         data=[
