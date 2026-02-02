@@ -163,6 +163,59 @@ def test_filter_containers_no_matches_returns_empty(db_session, room):
     assert len(result.data) == 0
 
 
+# Room inclusion tests ------------------------------------------------------------
+
+def test_list_containers_paginated_includes_room(db_session, room):
+    """list_containers_paginated includes nested room object"""
+    create_containers(db_session, room.id, 1)
+    
+    result = containers_service.list_containers_paginated(db_session)
+    
+    assert len(result.data) == 1
+    container = result.data[0]
+    assert container.room is not None
+    assert container.room.id == room.id
+    assert container.room.name == room.name
+
+
+def test_list_containers_paginated_room_is_none_when_no_room(db_session):
+    """list_containers_paginated returns room=None when container has no room"""
+    container = Container(name="Orphan Container", room_id=None)
+    db_session.add(container)
+    db_session.commit()
+    
+    result = containers_service.list_containers_paginated(db_session)
+    
+    assert len(result.data) == 1
+    assert result.data[0].room is None
+
+
+def test_get_container_detail_includes_room(db_session, room):
+    """get_container_detail includes nested room object"""
+    container = Container(name="Test Container", room_id=room.id)
+    db_session.add(container)
+    db_session.commit()
+    
+    result = containers_service.get_container_detail(db_session, container.id)
+    
+    assert result is not None
+    assert result.room is not None
+    assert result.room.id == room.id
+    assert result.room.name == room.name
+
+
+def test_get_container_detail_room_is_none_when_no_room(db_session):
+    """get_container_detail returns room=None when container has no room"""
+    container = Container(name="Orphan Container", room_id=None)
+    db_session.add(container)
+    db_session.commit()
+    
+    result = containers_service.get_container_detail(db_session, container.id)
+    
+    assert result is not None
+    assert result.room is None
+
+
 # List all containers tests (for "Show all" dropdown) -----------------------------
 
 def test_list_all_containers_returns_all_within_limit(db_session, room):
