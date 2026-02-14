@@ -11,6 +11,10 @@ class ContainerCreate(BaseModel):
     name: str | None = None
     room_id: int | None = None
 
+class ContainerUpdate(BaseModel):
+    name: str | None = None
+    room_id: int | None = None
+
 class ContainerResponse(BaseModel):
     id: int
     name: str | None = None

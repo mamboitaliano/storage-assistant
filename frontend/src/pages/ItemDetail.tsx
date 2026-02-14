@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import PageHeader from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { itemsApi, roomsApi } from "@/api";
 import { useApi } from "@/hooks/useApi";
 import { RoomSelector } from "@/components/RoomSelector";
@@ -12,6 +14,7 @@ import type { RoomOption, ContainerOption } from "@/api";
 export default function ItemDetail() {
     const [editing, setEditing] = useState(false);
     const [allRooms, setAllRooms] = useState<RoomOption[] | null>(null);
+    const [pendingName, setPendingName] = useState<string>("");
     const [pendingRoomId, setPendingRoomId] = useState<number | null>(null);
     const [pendingContainer, setPendingContainer] = useState<SelectOption | null>(null);
     
@@ -32,16 +35,15 @@ export default function ItemDetail() {
 
     // Initialize pending values when data loads
     useEffect(() => {
-        if (data?.room_id) {
+        if (data) {
+            setPendingName(data.name || "");
             setPendingRoomId(data.room_id);
+            setPendingContainer(data.container 
+                ? { id: data.container.id, name: data.container.name } 
+                : null
+            );
         }
-
-        if (data?.container) {
-            setPendingContainer({ id: data.container.id, name: data.container.name });
-        } else {
-            setPendingContainer(null);
-        }
-    }, [data?.room_id, data?.container]);
+    }, [data]);
 
     // Load containers when room changes (in edit mode)
     useEffect(() => {
@@ -74,8 +76,11 @@ export default function ItemDetail() {
 
     // Save changes
     const handleSave = async () => {
-        const updates: { room_id?: number; container_id?: number } = {};
+        const updates: { name?: string; room_id?: number; container_id?: number } = {};
         
+        if (pendingName !== data?.name) {
+            updates.name = pendingName;
+        }
         if (pendingRoomId !== data?.room_id) {
             updates.room_id = pendingRoomId ?? undefined;
         }
@@ -93,6 +98,7 @@ export default function ItemDetail() {
 
     // Discard pending changes
     const handleCancel = () => {
+        setPendingName(data?.name || "");
         setPendingRoomId(data?.room_id ?? null);
         setPendingContainer(data?.container ? { id: data.container.id, name: data.container.name } : null);
         setAllRooms(null);
@@ -113,7 +119,7 @@ export default function ItemDetail() {
     return (
         <div className="flex flex-col h-full">
             <PageHeader
-                title={data?.name || 'Loading...'}
+                title={loading ? 'Loading...' : (data?.name || 'Unnamed Item')}
                 action={
                     editing ?
                     (
@@ -138,6 +144,19 @@ export default function ItemDetail() {
                 }
             />
             <div className="flex-1 min-h-0 mt-6 overflow-auto max-w-md space-y-4">
+                {/* Name input - only in edit mode */}
+                {editing && (
+                    <div className="space-y-2">
+                        <Label htmlFor="item-name">Item name</Label>
+                        <Input
+                            id="item-name"
+                            value={pendingName}
+                            onChange={(e) => setPendingName(e.target.value)}
+                            placeholder="Enter item name"
+                        />
+                    </div>
+                )}
+
                 <div>
                     <RoomSelector
                         value={pendingRoomId?.toString() ?? ""}
