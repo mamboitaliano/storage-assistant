@@ -7,6 +7,7 @@ from ..database import DATA_DIR
 from ..models import Container, Item
 from ..schemas.containers import (
     ContainerCreate,
+    ContainerUpdate,
     ContainerResponse,
     ContainerDetailResponse,
     ContainerItemCreate,
@@ -86,21 +87,33 @@ def get_container_detail(db: Session, container_id: int) -> ContainerDetailRespo
 
     return ContainerDetailResponse.model_validate(container)
 
-def update_container(db: Session, container_id: int, data: ContainerCreate) -> ContainerDetailResponse | None:
+def update_container(db: Session, container_id: int, data: ContainerUpdate) -> ContainerDetailResponse | None:
     """Update a container"""
     container = (
         db.query(Container)
-        .options(joinedload(Container.room))
+        .options(joinedload(Container.room), joinedload(Container.items))
         .filter(Container.id == container_id)
         .first()
     )
     if not container:
         return None
 
-    container.name = data.name
-    container.room_id = data.room_id
+    # Use exclude_unset to only update fields that were explicitly provided
+    update_data = data.model_dump(exclude_unset=True)
+    
+    for field, value in update_data.items():
+        setattr(container, field, value)
+
     db.commit()
     db.refresh(container)
+    
+    # Reload with relationships for response
+    container = (
+        db.query(Container)
+        .options(joinedload(Container.room), joinedload(Container.items))
+        .filter(Container.id == container_id)
+        .first()
+    )
 
     return ContainerDetailResponse.model_validate(container)
 

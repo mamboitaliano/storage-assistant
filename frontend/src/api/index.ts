@@ -123,6 +123,10 @@ export const containersApi = {
         const response = await api.post<Container>('/containers/', data);
         return response.data;
     },
+    update: async (id: number, data: { name?: string; room_id?: number | null }) => {
+        const response = await api.put<ContainerDetail>(`/containers/${id}`, data);
+        return response.data;
+    },
     delete: async (id: number) => {
         const { data } = await api.delete(`/containers/${id}`);
         return data;

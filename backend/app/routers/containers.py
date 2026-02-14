@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..schemas.containers import (
     ContainerCreate,
+    ContainerUpdate,
     ContainerResponse,
     ContainerDetailResponse,
     ContainerItemCreate,
@@ -68,8 +69,8 @@ def get_container(container_id: int, db: Session = Depends(get_db)):
     return container
 
 @router.put("/{container_id}")
-def update_container(container_id: int, data: ContainerCreate, db: Session = Depends(get_db)):
-    """Update a container name"""
+def update_container(container_id: int, data: ContainerUpdate, db: Session = Depends(get_db)):
+    """Update a container's name and/or room"""
     container = containers_service.update_container(db, container_id, data)
     if not container:
         raise HTTPException(status_code=404, detail="Container not found")
