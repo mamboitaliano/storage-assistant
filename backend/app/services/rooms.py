@@ -3,7 +3,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from ..models import Room, Item, Container
-from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemsResponse, RoomItemCreate, PaginatedRoomResponse
+from ..schemas.rooms import RoomCreate, RoomUpdate, RoomResponse, RoomItemsResponse, RoomItemCreate, PaginatedRoomResponse
 from ..schemas.items import ItemResponse
 from ..schemas.containers import ContainerOption
 
@@ -193,3 +193,22 @@ def list_all_rooms(db: Session, limit: int = 200) -> tuple[list[Room], int, bool
     rooms = db.query(Room).limit(limit).all()
     has_more = total > limit
     return rooms, total, has_more
+
+
+def update_room(db: Session, room_id: int, data: RoomUpdate) -> RoomResponse | None:
+    """Update a room"""
+    room = db.query(Room).filter(Room.id == room_id).first()
+    if not room:
+        return None
+
+    # Use exclude_unset to only update fields that were explicitly provided
+    update_data = data.model_dump(exclude_unset=True)
+    
+    for field, value in update_data.items():
+        setattr(room, field, value)
+
+    db.commit()
+    db.refresh(room)
+
+    # Return with counts
+    return get_room_detail(db, room_id)

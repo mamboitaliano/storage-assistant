@@ -162,6 +162,10 @@ export const roomsApi = {
         const response = await api.post<Room>('/rooms/', data);
         return response.data;
     },
+    update: async (id: number, data: { name?: string; floor_id?: number | null }) => {
+        const response = await api.put<Room>(`/rooms/${id}`, data);
+        return response.data;
+    },
     addItem: async (roomId: number, data: { name?: string, quantity?: number }) => {
         const response = await api.post<Item>(`/rooms/${roomId}/items/`, data);
         return response.data;

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..schemas.rooms import RoomCreate, RoomResponse, RoomItemCreate, PaginatedRoomResponse, RoomOption, RoomOptionsResponse
+from ..schemas.rooms import RoomCreate, RoomUpdate, RoomResponse, RoomItemCreate, PaginatedRoomResponse, RoomOption, RoomOptionsResponse
 from ..schemas.containers import ContainerOption
 from ..schemas.items import ItemResponse, PaginatedItemResponse
 from ..services import rooms as rooms_service
@@ -39,6 +39,15 @@ def list_all_rooms(limit: int = Query(200, ge=1, le=500), db: Session = Depends(
 def get_room(room_id: int, db: Session = Depends(get_db)):
     """Get a room by ID"""
     room = rooms_service.get_room_detail(db, room_id)
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    return room
+
+@router.put("/{room_id}", response_model=RoomResponse)
+def update_room(room_id: int, data: RoomUpdate, db: Session = Depends(get_db)):
+    """Update a room's name and/or floor"""
+    room = rooms_service.update_room(db, room_id, data)
     if not room:
         raise HTTPException(status_code=404, detail="Room not found")
     
