@@ -102,6 +102,19 @@ def get_items_paginated(
         data=items,
     ), None
 
+def get_item(db: Session, item_id: int) -> ItemResponse | None:
+    """Get a single item by ID"""
+    item = (
+        db.query(Item)
+        .options(joinedload(Item.room), joinedload(Item.container))
+        .filter(Item.id == item_id)
+        .first()
+    )
+    if not item:
+        return None
+    return ItemResponse.model_validate(item)
+
+
 def get_items(db: Session) -> list[Item]:
     items = db.query(Item).all()
     return items
@@ -116,17 +129,23 @@ def update_item(db: Session, item_id: int, data: ItemUpdate) -> ItemResponse | N
     if not item:
         return None
 
-    if data.name is not None:
-        item.name = data.name
-    if data.room_id is not None:
-        item.room_id = data.room_id
-    if data.container_id is not None:
-        item.container_id = data.container_id
-    if data.quantity is not None:
-        item.quantity = data.quantity
+    # Use exclude_unset to only update fields that were explicitly provided
+    # This allows setting container_id to None (to clear it)
+    update_data = data.model_dump(exclude_unset=True)
+    
+    for field, value in update_data.items():
+        setattr(item, field, value)
 
     db.commit()
     db.refresh(item)
+    
+    # Reload with relationships for response
+    item = (
+        db.query(Item)
+        .options(joinedload(Item.room), joinedload(Item.container))
+        .filter(Item.id == item_id)
+        .first()
+    )
 
     return ItemResponse.model_validate(item)
 

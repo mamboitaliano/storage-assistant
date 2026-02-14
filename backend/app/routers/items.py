@@ -43,6 +43,16 @@ def get_items(
     
     return result
 
+
+@router.get("/{item_id}", response_model=ItemResponse)
+def get_item(item_id: int, db: Session = Depends(get_db)):
+    """Get a single item by ID"""
+    item = items_service.get_item(db, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return item
+
+
 @router.put("/{item_id}")
 def update_item(item_id: int, data: ItemUpdate, db: Session = Depends(get_db)):
     """Update an item's name or quantity"""

@@ -54,6 +54,44 @@ def test_create_item_container_not_found(db_session, room):
     assert error == "container_not_found"
 
 
+# Get single item tests -----------------------------------------------------------
+
+def test_get_item_returns_item_with_room(db_session, room):
+    """get_item returns item with nested room"""
+    items = create_items(db_session, None, room.id, quantity=1, count=1)
+    
+    result = items_service.get_item(db_session, items[0].id)
+    
+    assert result is not None
+    assert result.id == items[0].id
+    assert result.name == items[0].name
+    assert result.room_id == room.id
+    assert result.room.id == room.id
+    assert result.room.name == room.name
+
+
+def test_get_item_returns_item_with_container(db_session, room, container):
+    """get_item returns item with nested room and container"""
+    from app.models import Item
+    item = Item(name="Wrench", room_id=room.id, container_id=container.id, quantity=1)
+    db_session.add(item)
+    db_session.commit()
+    
+    result = items_service.get_item(db_session, item.id)
+    
+    assert result is not None
+    assert result.container_id == container.id
+    assert result.container.id == container.id
+    assert result.container.name == container.name
+
+
+def test_get_item_returns_none_when_not_found(db_session):
+    """get_item returns None when item doesn't exist"""
+    result = items_service.get_item(db_session, 99999)
+    
+    assert result is None
+
+
 # Update item tests ---------------------------------------------------------------
 
 def test_update_item(db_session, room):
