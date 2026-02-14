@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..services import floors as floors_service
-from ..schemas.floors import FloorCreate, FloorResponse, PaginatedFloorResponse
+from ..schemas.floors import FloorCreate, FloorUpdate, FloorResponse, PaginatedFloorResponse
 from ..schemas.rooms import RoomOption
 
 router = APIRouter()
@@ -25,6 +25,15 @@ def get_floor(floor_id: int, db: Session = Depends(get_db)):
     if not floor:
         raise HTTPException(status_code=404, detail="Floor not found")
 
+    return floor
+
+@router.put("/{floor_id}", response_model=FloorResponse)
+def update_floor(floor_id: int, data: FloorUpdate, db: Session = Depends(get_db)):
+    """Update a floor's name and/or floor number"""
+    floor = floors_service.update_floor(db, floor_id, data)
+    if not floor:
+        raise HTTPException(status_code=404, detail="Floor not found")
+    
     return floor
 
 @router.get("/{floor_id}/rooms", response_model=list[RoomOption])

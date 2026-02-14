@@ -6,6 +6,10 @@ class FloorCreate(BaseModel):
     name: str | None = None
     floor_number: int | None = None
 
+class FloorUpdate(BaseModel):
+    name: str | None = None
+    floor_number: int | None = None
+
 class FloorResponse(BaseModel):
     id: int
     name: str | None = None
