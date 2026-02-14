@@ -7,6 +7,10 @@ class RoomCreate(BaseModel):
     name: str | None = None
     floor_id: int | None = None
 
+class RoomUpdate(BaseModel):
+    name: str | None = None
+    floor_id: int | None = None
+
 class RoomResponse(BaseModel):
     id: int
     name: str | None = None
