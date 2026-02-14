@@ -219,6 +219,10 @@ export const itemsApi = {
         const { data } = await api.get<PaginatedResponse<Item>>(`/items/?${params}`);
         return data;
     },
+    get: async (id: number) => {
+        const { data } = await api.get<Item>(`/items/${id}`);
+        return data;
+    },
     create: async (data: { name: string, room_id: number, container_id?: number | null }) => {
         const response = await api.post<Item>(`/items/`, {
             name: data.name,
@@ -227,8 +231,8 @@ export const itemsApi = {
         });
         return response.data;
     },
-    update: async (id: number, data: { name?: string, quantity?: number }) => {
-        const response = await api.put<Item>(`/items/${id}/`, data);
+    update: async (id: number, data: { name?: string, quantity?: number, room_id?: number, container_id?: number | null }) => {
+        const response = await api.put<Item>(`/items/${id}`, data);
         return response.data;
     },
     delete: async (id: number, quantity?: number) => {

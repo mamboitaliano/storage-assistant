@@ -1,20 +1,27 @@
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { ContainerOption } from "@/api";
 
-interface ContainerSelectorProps {
-    containers: ContainerOption[] | null;
-    onValueChange: (value: string) => void;
-    disabled?: boolean;
+interface ContainerSelectorOption {
+    id: number;
+    name: string | null;
 }
 
-export function ContainerSelector({ containers, onValueChange, disabled }: ContainerSelectorProps) {
+interface ContainerSelectorProps {
+    containers: ContainerSelectorOption[] | null;
+    value?: string;
+    onValueChange: (value: string) => void;
+    disabled?: boolean;
+    placeholder?: string;
+    label?: string;
+}
+
+export function ContainerSelector({ containers, value, onValueChange, disabled, placeholder = "Select a container", label = "Container (optional)" }: ContainerSelectorProps) {
     return (
         <Field>
-            <FieldLabel>Container (optional)</FieldLabel>
-            <Select onValueChange={onValueChange} disabled={disabled}>
+            <FieldLabel>{label}</FieldLabel>
+            <Select value={value ?? ""} onValueChange={onValueChange} disabled={disabled}>
                 <SelectTrigger>
-                    <SelectValue placeholder="Select a container" />
+                    <SelectValue placeholder={placeholder} />
                 </SelectTrigger>
                 <SelectContent position="item-aligned">
                     {containers?.map((container) => (

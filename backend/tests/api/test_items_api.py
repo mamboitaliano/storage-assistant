@@ -76,6 +76,49 @@ def test_create_item_api_container_not_found(client, room):
     assert resp.json()["detail"] == "Container not found"
 
 
+# Get single item API tests -------------------------------------------------------
+
+def test_get_item_api_returns_item(client, db_session, room):
+    """GET /items/{id} returns item with nested room"""
+    item = Item(name="Screwdriver", room_id=room.id, quantity=2)
+    db_session.add(item)
+    db_session.commit()
+    
+    resp = client.get(f"/items/{item.id}")
+    
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["id"] == item.id
+    assert data["name"] == "Screwdriver"
+    assert data["quantity"] == 2
+    assert data["room_id"] == room.id
+    assert data["room"]["id"] == room.id
+    assert data["room"]["name"] == room.name
+
+
+def test_get_item_api_with_container(client, db_session, room, container):
+    """GET /items/{id} returns item with nested container"""
+    item = Item(name="Hammer", room_id=room.id, container_id=container.id, quantity=1)
+    db_session.add(item)
+    db_session.commit()
+    
+    resp = client.get(f"/items/{item.id}")
+    
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["container_id"] == container.id
+    assert data["container"]["id"] == container.id
+    assert data["container"]["name"] == container.name
+
+
+def test_get_item_api_not_found(client):
+    """GET /items/{id} returns 404 when item doesn't exist"""
+    resp = client.get("/items/99999")
+    
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "Item not found"
+
+
 # Update item API tests -----------------------------------------------------------
 
 def test_update_item_api(client, db_session, room):

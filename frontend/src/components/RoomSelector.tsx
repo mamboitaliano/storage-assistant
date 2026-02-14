@@ -4,16 +4,17 @@ import type { RoomOption } from "@/api";
 
 interface RoomSelectionProps{
     rooms: RoomOption[] | null;
+    value?: string;
     onValueChange: (value: string) => void;
     disabled?: boolean;
     required?: boolean;
 }
 
-export function RoomSelector({ rooms, onValueChange, disabled, required }: RoomSelectionProps) {
+export function RoomSelector({ value, rooms, onValueChange, disabled, required }: RoomSelectionProps) {
     return (
         <Field>
             <FieldLabel>Room {required ? "(required)" : ""}</FieldLabel>
-            <Select onValueChange={onValueChange} disabled={disabled}>
+            <Select value={value} onValueChange={onValueChange} disabled={disabled}>
                 <SelectTrigger>
                     <SelectValue placeholder="Select a room" />
                 </SelectTrigger>
