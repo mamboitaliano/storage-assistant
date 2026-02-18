@@ -2,7 +2,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..models import Container, Floor, Item, Room
-from ..schemas.floors import FloorCreate, FloorResponse, RoomResponse, PaginatedFloorResponse
+from ..schemas.floors import FloorCreate, FloorUpdate, FloorResponse, RoomResponse, PaginatedFloorResponse
 from ..schemas.rooms import RoomOption
 
 PAGE_SIZE = 25
@@ -116,3 +116,22 @@ def delete_floor(db: Session, floor_id: int) -> None:
 
 def get_floor(db: Session, floor_id: int) -> Floor | None:
     return db.query(Floor).filter(Floor.id == floor_id).first()
+
+
+def update_floor(db: Session, floor_id: int, data: FloorUpdate) -> FloorResponse | None:
+    """Update a floor"""
+    floor = db.query(Floor).filter(Floor.id == floor_id).first()
+    if not floor:
+        return None
+
+    # Use exclude_unset to only update fields that were explicitly provided
+    update_data = data.model_dump(exclude_unset=True)
+    
+    for field, value in update_data.items():
+        setattr(floor, field, value)
+
+    db.commit()
+    db.refresh(floor)
+
+    # Return with room count
+    return get_floor_detail(db, floor_id)
